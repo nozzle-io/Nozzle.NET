@@ -3,6 +3,7 @@ using Nozzle;
 
 const string SenderName = "nozzle_sample_sender";
 const string AppName = "Nozzle.Receiver";
+var _running = true;
 
 Console.CancelKeyPress += (_, e) =>
 {
@@ -41,5 +42,3 @@ while (_running)
 
 receiver.Dispose();
 Console.WriteLine("Receiver shut down.");
-
-static bool _running = true;

@@ -7,6 +7,7 @@ const string AppName = "Nozzle.Sender";
 const uint Width = 640;
 const uint Height = 480;
 const float Fps = 30.0f;
+var _running = true;
 
 Console.CancelKeyPress += (_, e) =>
 {
@@ -56,7 +57,7 @@ finally
     Console.WriteLine("Sender shut down.");
 }
 
-static void FillGradient(byte[] buffer, uint width, uint height, uint frameIndex)
+void FillGradient(byte[] buffer, uint width, uint height, uint frameIndex)
 {
     float t = frameIndex / (Fps * 10.0f);
     int stride = (int)width * 16;
@@ -79,7 +80,7 @@ static void FillGradient(byte[] buffer, uint width, uint height, uint frameIndex
     }
 }
 
-static void WriteFloat(byte[] buffer, int offset, float value)
+void WriteFloat(byte[] buffer, int offset, float value)
 {
     var bytes = BitConverter.GetBytes(value);
     buffer[offset] = bytes[0];
@@ -87,6 +88,3 @@ static void WriteFloat(byte[] buffer, int offset, float value)
     buffer[offset + 2] = bytes[2];
     buffer[offset + 3] = bytes[3];
 }
-
-static float Fps = 30.0f;
-static bool _running = true;
