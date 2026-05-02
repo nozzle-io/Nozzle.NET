@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>Nozzle</RootNamespace>
+    <PackageId>Nozzle.NET</PackageId>
+    <Description>.NET bindings for nozzle — cross-platform inter-process GPU texture sharing</Description>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+</Project>
