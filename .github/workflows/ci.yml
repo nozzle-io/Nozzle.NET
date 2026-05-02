@@ -22,4 +22,6 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - run: dotnet build
+      - run: dotnet build Nozzle.NET.sln
+
+      - run: dotnet test Nozzle.NET.sln --no-build --verbosity normal
