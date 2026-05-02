@@ -37,13 +37,16 @@ public readonly struct SenderInfo
 
     internal static SenderInfo FromNative(NativeMethods.SenderInfo native)
     {
-        return new SenderInfo
+        unsafe
         {
-            Name = Marshal.PtrToStringUTF8((nint)native.Name) ?? "",
-            ApplicationName = Marshal.PtrToStringUTF8((nint)native.ApplicationName) ?? "",
-            Id = Marshal.PtrToStringUTF8((nint)native.Id) ?? "",
-            Backend = (BackendType)native.Backend,
-        };
+            return new SenderInfo
+            {
+                Name = Marshal.PtrToStringUTF8((nint)native.Name) ?? "",
+                ApplicationName = Marshal.PtrToStringUTF8((nint)native.ApplicationName) ?? "",
+                Id = Marshal.PtrToStringUTF8((nint)native.Id) ?? "",
+                Backend = (BackendType)native.Backend,
+            };
+        }
     }
 }
 
@@ -64,19 +67,22 @@ public readonly struct ConnectedSenderInfo
 
     internal static ConnectedSenderInfo FromNative(NativeMethods.ConnectedSenderInfo native)
     {
-        return new ConnectedSenderInfo
+        unsafe
         {
-            Name = Marshal.PtrToStringUTF8((nint)native.Name) ?? "",
-            ApplicationName = Marshal.PtrToStringUTF8((nint)native.ApplicationName) ?? "",
-            Id = Marshal.PtrToStringUTF8((nint)native.Id) ?? "",
-            Backend = (BackendType)native.Backend,
-            Width = native.Width,
-            Height = native.Height,
-            Format = (TextureFormat)native.Format,
-            EstimatedFps = native.EstimatedFps,
-            FrameCounter = native.FrameCounter,
-            LastUpdateTimeNs = native.LastUpdateTimeNs,
-        };
+            return new ConnectedSenderInfo
+            {
+                Name = Marshal.PtrToStringUTF8((nint)native.Name) ?? "",
+                ApplicationName = Marshal.PtrToStringUTF8((nint)native.ApplicationName) ?? "",
+                Id = Marshal.PtrToStringUTF8((nint)native.Id) ?? "",
+                Backend = (BackendType)native.Backend,
+                Width = native.Width,
+                Height = native.Height,
+                Format = (TextureFormat)native.Format,
+                EstimatedFps = native.EstimatedFps,
+                FrameCounter = native.FrameCounter,
+                LastUpdateTimeNs = native.LastUpdateTimeNs,
+            };
+        }
     }
 }
 
@@ -90,13 +96,16 @@ public readonly struct MappedPixels
 
     internal static MappedPixels FromNative(NativeMethods.MappedPixels native)
     {
-        return new MappedPixels
+        unsafe
         {
-            Data = (nint)native.Data,
-            RowBytes = native.RowBytes,
-            Width = native.Width,
-            Height = native.Height,
-            Format = (TextureFormat)native.Format,
-        };
+            return new MappedPixels
+            {
+                Data = (nint)native.Data,
+                RowBytes = native.RowBytes,
+                Width = native.Width,
+                Height = native.Height,
+                Format = (TextureFormat)native.Format,
+            };
+        }
     }
 }

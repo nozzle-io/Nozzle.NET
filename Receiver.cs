@@ -44,7 +44,7 @@ public sealed class Receiver : IDisposable
             NativeMethods.NozzleFrame* frame;
             var result = NativeMethods.nozzle_receiver_acquire_frame(_handle, &desc, &frame);
 
-            if (result == NativeMethods.ErrorCode.ErrorCodeTimeout ||
+            if (result == NativeMethods.ErrorCode.ErrorTimeout ||
                 result == NativeMethods.ErrorCode.ErrorSenderClosed ||
                 result == NativeMethods.ErrorCode.ErrorSenderNotFound)
             {
