@@ -177,9 +177,9 @@ public class SenderInfoTests
     public void Default_constructor_exists()
     {
         var info = new SenderInfo();
-        Assert.Equal("", info.Name);
-        Assert.Equal("", info.ApplicationName);
-        Assert.Equal("", info.Id);
+        Assert.Null(info.Name);
+        Assert.Null(info.ApplicationName);
+        Assert.Null(info.Id);
         Assert.Equal(BackendType.Unknown, info.Backend);
     }
 
@@ -207,9 +207,9 @@ public class ConnectedSenderInfoTests
     public void Default_constructor_exists()
     {
         var info = new ConnectedSenderInfo();
-        Assert.Equal("", info.Name);
-        Assert.Equal("", info.ApplicationName);
-        Assert.Equal("", info.Id);
+        Assert.Null(info.Name);
+        Assert.Null(info.ApplicationName);
+        Assert.Null(info.Id);
         Assert.Equal(BackendType.Unknown, info.Backend);
         Assert.Equal(0u, info.Width);
         Assert.Equal(0u, info.Height);
