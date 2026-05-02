@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Nozzle;
 
 const string SenderName = "nozzle_sample_sender";
