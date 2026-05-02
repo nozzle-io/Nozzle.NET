@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 
 namespace Nozzle;
@@ -27,10 +28,12 @@ public readonly struct FrameInfo
 
 public readonly struct SenderInfo
 {
-    public string Name { get; init; } = "";
-    public string ApplicationName { get; init; } = "";
-    public string Id { get; init; } = "";
+    public string Name { get; init; }
+    public string ApplicationName { get; init; }
+    public string Id { get; init; }
     public BackendType Backend { get; init; }
+
+    public SenderInfo() { }
 
     internal static SenderInfo FromNative(NativeMethods.SenderInfo native)
     {
@@ -46,9 +49,9 @@ public readonly struct SenderInfo
 
 public readonly struct ConnectedSenderInfo
 {
-    public string Name { get; init; } = "";
-    public string ApplicationName { get; init; } = "";
-    public string Id { get; init; } = "";
+    public string Name { get; init; }
+    public string ApplicationName { get; init; }
+    public string Id { get; init; }
     public BackendType Backend { get; init; }
     public uint Width { get; init; }
     public uint Height { get; init; }
@@ -56,6 +59,8 @@ public readonly struct ConnectedSenderInfo
     public double EstimatedFps { get; init; }
     public ulong FrameCounter { get; init; }
     public ulong LastUpdateTimeNs { get; init; }
+
+    public ConnectedSenderInfo() { }
 
     internal static ConnectedSenderInfo FromNative(NativeMethods.ConnectedSenderInfo native)
     {
