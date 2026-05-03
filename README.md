@@ -1,5 +1,8 @@
 # Nozzle.NET
 
+> This codebase is currently in its AI-slob prototyping phase: the code runs on momentum, vibes, and plausible intent.
+> Proper debugging will be introduced once demand graduates from hypothetical to measurable.
+
 .NET 8 P/Invoke bindings for [nozzle](https://github.com/nozzle-io/nozzle) — cross-platform inter-process GPU texture sharing.
 
 Uses `[LibraryImport]` with source-generated marshalling (requires .NET 7+).
