@@ -78,6 +78,16 @@ public sealed class Sender : IDisposable
         }
     }
 
+    public void PublishNativeTexture(IntPtr nativeTexture, uint width, uint height, TextureFormat format)
+    {
+        unsafe
+        {
+            ErrorHelper.ThrowIfFailed(
+                NativeMethods.nozzle_sender_publish_native_texture(_handle, (void*)nativeTexture,
+                    width, height, (NativeMethods.TextureFormat)format));
+        }
+    }
+
     private unsafe void Dispose(bool disposing)
     {
         if (_handle != null)

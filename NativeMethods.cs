@@ -166,6 +166,16 @@ internal static unsafe partial class NativeMethods
         public TextureFormat Format;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TextureWrapDesc
+    {
+        public void* NativeTexture;
+        public uint Width;
+        public uint Height;
+        public TextureFormat Format;
+        public BackendType Backend;
+    }
+
     // ========== Sender API ==========
 
     [LibraryImport(LibraryName)]
@@ -240,6 +250,27 @@ internal static unsafe partial class NativeMethods
 
     [LibraryImport(LibraryName)]
     public static partial void nozzle_device_destroy(NozzleDevice* device);
+
+    // ========== Native Texture Interop (GPU) ==========
+
+    [LibraryImport(LibraryName)]
+    public static partial ErrorCode nozzle_sender_publish_native_texture(
+        NozzleSender* sender, void* native_texture,
+        uint width, uint height, TextureFormat format);
+
+    [LibraryImport(LibraryName)]
+    public static partial ErrorCode nozzle_frame_copy_to_native_texture(
+        NozzleFrame* frame, void* native_texture,
+        uint width, uint height, TextureFormat format);
+
+    // ========== Texture Wrap ==========
+
+    [LibraryImport(LibraryName)]
+    public static partial ErrorCode nozzle_texture_wrap(
+        TextureWrapDesc* desc, NozzleTexture** out_texture);
+
+    [LibraryImport(LibraryName)]
+    public static partial void nozzle_texture_destroy(NozzleTexture* texture);
 
     // ========== GL Interop ==========
 
