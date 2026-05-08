@@ -10,6 +10,7 @@ public readonly struct FrameInfo
     public uint Width { get; init; }
     public uint Height { get; init; }
     public TextureFormat Format { get; init; }
+    public TextureFormat SemanticFormat { get; init; }
     public uint DroppedFrameCount { get; init; }
 
     internal static FrameInfo FromNative(NativeMethods.FrameInfo native)
@@ -21,6 +22,7 @@ public readonly struct FrameInfo
             Width = native.Width,
             Height = native.Height,
             Format = (TextureFormat)native.Format,
+            SemanticFormat = (TextureFormat)native.SemanticFormat,
             DroppedFrameCount = native.DroppedFrameCount,
         };
     }
@@ -59,6 +61,7 @@ public readonly struct ConnectedSenderInfo
     public uint Width { get; init; }
     public uint Height { get; init; }
     public TextureFormat Format { get; init; }
+    public TextureFormat SemanticFormat { get; init; }
     public double EstimatedFps { get; init; }
     public ulong FrameCounter { get; init; }
     public ulong LastUpdateTimeNs { get; init; }
@@ -78,6 +81,7 @@ public readonly struct ConnectedSenderInfo
                 Width = native.Width,
                 Height = native.Height,
                 Format = (TextureFormat)native.Format,
+                SemanticFormat = (TextureFormat)native.SemanticFormat,
                 EstimatedFps = native.EstimatedFps,
                 FrameCounter = native.FrameCounter,
                 LastUpdateTimeNs = native.LastUpdateTimeNs,

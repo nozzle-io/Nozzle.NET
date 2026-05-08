@@ -129,6 +129,7 @@ internal static unsafe partial class NativeMethods
         public uint Width;
         public uint Height;
         public TextureFormat Format;
+        public TextureFormat SemanticFormat;
         public double EstimatedFps;
         public ulong FrameCounter;
         public ulong LastUpdateTimeNs;
@@ -142,6 +143,7 @@ internal static unsafe partial class NativeMethods
         public uint Width;
         public uint Height;
         public TextureFormat Format;
+        public TextureFormat SemanticFormat;
         public uint DroppedFrameCount;
     }
 
@@ -257,6 +259,11 @@ internal static unsafe partial class NativeMethods
     public static partial ErrorCode nozzle_sender_publish_native_texture(
         NozzleSender* sender, void* native_texture,
         uint width, uint height, TextureFormat format);
+
+    [LibraryImport(LibraryName)]
+    public static partial ErrorCode nozzle_sender_publish_native_texture_ex(
+        NozzleSender* sender, void* native_texture,
+        uint width, uint height, TextureFormat storage_format, TextureFormat semantic_format);
 
     [LibraryImport(LibraryName)]
     public static partial ErrorCode nozzle_frame_copy_to_native_texture(
