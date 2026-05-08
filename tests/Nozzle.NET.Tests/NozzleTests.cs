@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Xunit;
 
 namespace Nozzle.Tests;
@@ -146,6 +147,7 @@ public class FrameInfoTests
         Assert.Equal(0u, info.Width);
         Assert.Equal(0u, info.Height);
         Assert.Equal(TextureFormat.Unknown, info.Format);
+        Assert.Equal(TextureFormat.Unknown, info.SemanticFormat);
         Assert.Equal(0u, info.DroppedFrameCount);
     }
 
@@ -159,6 +161,7 @@ public class FrameInfoTests
             Width = 1920,
             Height = 1080,
             Format = TextureFormat.Rgba32Float,
+            SemanticFormat = TextureFormat.Rgba8Unorm,
             DroppedFrameCount = 3,
         };
 
@@ -167,6 +170,7 @@ public class FrameInfoTests
         Assert.Equal(1920u, info.Width);
         Assert.Equal(1080u, info.Height);
         Assert.Equal(TextureFormat.Rgba32Float, info.Format);
+        Assert.Equal(TextureFormat.Rgba8Unorm, info.SemanticFormat);
         Assert.Equal(3u, info.DroppedFrameCount);
     }
 }
@@ -214,6 +218,7 @@ public class ConnectedSenderInfoTests
         Assert.Equal(0u, info.Width);
         Assert.Equal(0u, info.Height);
         Assert.Equal(TextureFormat.Unknown, info.Format);
+        Assert.Equal(TextureFormat.Unknown, info.SemanticFormat);
         Assert.Equal(0.0, info.EstimatedFps);
         Assert.Equal(0ul, info.FrameCounter);
         Assert.Equal(0ul, info.LastUpdateTimeNs);
@@ -231,6 +236,7 @@ public class ConnectedSenderInfoTests
             Width = 640,
             Height = 480,
             Format = TextureFormat.Rgba8Unorm,
+            SemanticFormat = TextureFormat.Rgba16Float,
             EstimatedFps = 60.0,
             FrameCounter = 100,
             LastUpdateTimeNs = 99999,
@@ -240,6 +246,7 @@ public class ConnectedSenderInfoTests
         Assert.Equal(640u, info.Width);
         Assert.Equal(480u, info.Height);
         Assert.Equal(TextureFormat.Rgba8Unorm, info.Format);
+        Assert.Equal(TextureFormat.Rgba16Float, info.SemanticFormat);
         Assert.Equal(60.0, info.EstimatedFps);
         Assert.Equal(100ul, info.FrameCounter);
     }
@@ -274,5 +281,40 @@ public class NativeReceiverTests
     public void Create_throws_without_native_lib()
     {
         Receiver.Create("test", "test");
+    }
+}
+
+public class NativeStructLayoutTests
+{
+    [Fact]
+    public void FrameInfo_has_semantic_format_property()
+    {
+        var prop = typeof(FrameInfo).GetProperty("SemanticFormat");
+        Assert.NotNull(prop);
+        Assert.Equal(typeof(TextureFormat), prop.PropertyType);
+    }
+
+    [Fact]
+    public void ConnectedSenderInfo_has_semantic_format_property()
+    {
+        var prop = typeof(ConnectedSenderInfo).GetProperty("SemanticFormat");
+        Assert.NotNull(prop);
+        Assert.Equal(typeof(TextureFormat), prop.PropertyType);
+    }
+
+    [Fact]
+    public void FrameInfo_from_native_method_exists_compiles_with_semantic_format()
+    {
+        var fromNative = typeof(FrameInfo).GetMethod("FromNative",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(fromNative);
+    }
+
+    [Fact]
+    public void ConnectedSenderInfo_from_native_method_exists_compiles_with_semantic_format()
+    {
+        var fromNative = typeof(ConnectedSenderInfo).GetMethod("FromNative",
+            BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(fromNative);
     }
 }
