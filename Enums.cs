@@ -82,3 +82,9 @@ public enum SyncMode
     AccessGuarded = 1,
     GpuFenceBestEffort = 2,
 }
+
+public enum TextureOrigin
+{
+    TopLeft = 0,
+    BottomLeft = 1,
+}

@@ -26,12 +26,13 @@ public sealed class Frame : IDisposable
         }
     }
 
-    public MappedPixels LockPixels()
+    public MappedPixels LockPixels(TextureOrigin origin = TextureOrigin.TopLeft)
     {
         unsafe
         {
             var pixels = new NativeMethods.MappedPixels();
-            ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_frame_lock_pixels(_handle, &pixels));
+            ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_frame_lock_pixels_with_origin(
+                _handle, (NativeMethods.TextureOrigin)origin, &pixels));
             return MappedPixels.FromNative(pixels);
         }
     }
@@ -44,12 +45,13 @@ public sealed class Frame : IDisposable
         }
     }
 
-    public MappedPixels LockWritablePixels()
+    public MappedPixels LockWritablePixels(TextureOrigin origin = TextureOrigin.TopLeft)
     {
         unsafe
         {
             var pixels = new NativeMethods.MappedPixels();
-            ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_frame_lock_writable_pixels(_handle, &pixels));
+            ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_frame_lock_writable_pixels_with_origin(
+                _handle, (NativeMethods.TextureOrigin)origin, &pixels));
             return MappedPixels.FromNative(pixels);
         }
     }

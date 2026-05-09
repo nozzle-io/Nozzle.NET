@@ -332,10 +332,41 @@ public class MappedPixelsTests
     {
         var pixels = new MappedPixels();
         Assert.Equal(nint.Zero, pixels.Data);
-        Assert.Equal(0u, pixels.RowBytes);
+        Assert.Equal(0L, pixels.RowStrideBytes);
         Assert.Equal(0u, pixels.Width);
         Assert.Equal(0u, pixels.Height);
         Assert.Equal(TextureFormat.Unknown, pixels.Format);
+        Assert.Equal(TextureOrigin.TopLeft, pixels.Origin);
+    }
+
+    [Fact]
+    public void Init_properties_work()
+    {
+        var pixels = new MappedPixels
+        {
+            Data = (nint)0x1234,
+            RowStrideBytes = 7680,
+            Width = 1920,
+            Height = 1080,
+            Format = TextureFormat.Rgba8Unorm,
+            Origin = TextureOrigin.BottomLeft,
+        };
+        Assert.Equal((nint)0x1234, pixels.Data);
+        Assert.Equal(7680L, pixels.RowStrideBytes);
+        Assert.Equal(1920u, pixels.Width);
+        Assert.Equal(1080u, pixels.Height);
+        Assert.Equal(TextureFormat.Rgba8Unorm, pixels.Format);
+        Assert.Equal(TextureOrigin.BottomLeft, pixels.Origin);
+    }
+}
+
+public class TextureOriginTests
+{
+    [Fact]
+    public void Values_match_c_abi()
+    {
+        Assert.Equal(0, (int)TextureOrigin.TopLeft);
+        Assert.Equal(1, (int)TextureOrigin.BottomLeft);
     }
 }
 
@@ -503,6 +534,57 @@ public class NativeConnectedSenderInfoLayoutTests
             };
             var managed = ConnectedSenderInfo.FromNative(native);
             Assert.Equal(0x123456789ABCDEF0ul, managed.NativeFormatModifier);
+        }
+    }
+}
+
+public class NativeMappedPixelsLayoutTests
+{
+    [Fact]
+    public void Size_matches_c_abi()
+    {
+        Assert.Equal(32, Marshal.SizeOf<NativeMethods.MappedPixels>());
+    }
+
+    [Fact]
+    public void Field_offsets_match_c_abi()
+    {
+        Assert.Equal(0, (int)Marshal.OffsetOf<NativeMethods.MappedPixels>("Data"));
+        Assert.Equal(8, (int)Marshal.OffsetOf<NativeMethods.MappedPixels>("RowStrideBytes"));
+        Assert.Equal(16, (int)Marshal.OffsetOf<NativeMethods.MappedPixels>("Width"));
+        Assert.Equal(20, (int)Marshal.OffsetOf<NativeMethods.MappedPixels>("Height"));
+        Assert.Equal(24, (int)Marshal.OffsetOf<NativeMethods.MappedPixels>("Format"));
+        Assert.Equal(28, (int)Marshal.OffsetOf<NativeMethods.MappedPixels>("Origin"));
+    }
+
+    [Fact]
+    public void RowStrideBytes_is_8_bytes()
+    {
+        Assert.Equal(8, (int)Marshal.OffsetOf<NativeMethods.MappedPixels>("Origin") -
+                        (int)Marshal.OffsetOf<NativeMethods.MappedPixels>("RowStrideBytes"));
+    }
+
+    [Fact]
+    public void FromNative_maps_all_fields()
+    {
+        unsafe
+        {
+            var native = new NativeMethods.MappedPixels
+            {
+                Data = (void*)0xDEAD,
+                RowStrideBytes = 7680,
+                Width = 1920,
+                Height = 1080,
+                Format = NativeMethods.TextureFormat.Rgba8Unorm,
+                Origin = NativeMethods.TextureOrigin.BottomLeft,
+            };
+            var managed = MappedPixels.FromNative(native);
+            Assert.Equal((nint)0xDEAD, managed.Data);
+            Assert.Equal(7680L, managed.RowStrideBytes);
+            Assert.Equal(1920u, managed.Width);
+            Assert.Equal(1080u, managed.Height);
+            Assert.Equal(TextureFormat.Rgba8Unorm, managed.Format);
+            Assert.Equal(TextureOrigin.BottomLeft, managed.Origin);
         }
     }
 }

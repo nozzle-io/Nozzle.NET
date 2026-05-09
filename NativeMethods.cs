@@ -104,6 +104,12 @@ internal static unsafe partial class NativeMethods
         Error = 4,
     }
 
+    public enum TextureOrigin : int
+    {
+        TopLeft = 0,
+        BottomLeft = 1,
+    }
+
     // ========== Descriptor Structs ==========
 
     [StructLayout(LayoutKind.Sequential)]
@@ -188,10 +194,11 @@ internal static unsafe partial class NativeMethods
     public struct MappedPixels
     {
         public void* Data;
-        public uint RowBytes;
+        public long RowStrideBytes;
         public uint Width;
         public uint Height;
         public TextureFormat Format;
+        public TextureOrigin Origin;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -252,13 +259,15 @@ internal static unsafe partial class NativeMethods
     // ========== Pixel Access ==========
 
     [LibraryImport(LibraryName)]
-    public static partial ErrorCode nozzle_frame_lock_pixels(NozzleFrame* frame, MappedPixels* out_pixels);
+    public static partial ErrorCode nozzle_frame_lock_pixels_with_origin(
+        NozzleFrame* frame, TextureOrigin desired_origin, MappedPixels* out_pixels);
 
     [LibraryImport(LibraryName)]
     public static partial void nozzle_frame_unlock_pixels(NozzleFrame* frame);
 
     [LibraryImport(LibraryName)]
-    public static partial ErrorCode nozzle_frame_lock_writable_pixels(NozzleFrame* frame, MappedPixels* out_pixels);
+    public static partial ErrorCode nozzle_frame_lock_writable_pixels_with_origin(
+        NozzleFrame* frame, TextureOrigin desired_origin, MappedPixels* out_pixels);
 
     [LibraryImport(LibraryName)]
     public static partial void nozzle_frame_unlock_writable_pixels(NozzleFrame* frame);

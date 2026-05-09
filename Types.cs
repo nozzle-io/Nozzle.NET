@@ -99,10 +99,11 @@ public readonly struct ConnectedSenderInfo
 public readonly struct MappedPixels
 {
     public nint Data { get; init; }
-    public uint RowBytes { get; init; }
+    public long RowStrideBytes { get; init; }
     public uint Width { get; init; }
     public uint Height { get; init; }
     public TextureFormat Format { get; init; }
+    public TextureOrigin Origin { get; init; }
 
     internal static MappedPixels FromNative(NativeMethods.MappedPixels native)
     {
@@ -111,10 +112,11 @@ public readonly struct MappedPixels
             return new MappedPixels
             {
                 Data = (nint)native.Data,
-                RowBytes = native.RowBytes,
+                RowStrideBytes = native.RowStrideBytes,
                 Width = native.Width,
                 Height = native.Height,
                 Format = (TextureFormat)native.Format,
+                Origin = (TextureOrigin)native.Origin,
             };
         }
     }
