@@ -16,4 +16,8 @@
     <Compile Remove="tests\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Nozzle.NET.Tests" />
+  </ItemGroup>
+
 </Project>
