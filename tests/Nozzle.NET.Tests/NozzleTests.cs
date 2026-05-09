@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Xunit;
 
 namespace Nozzle.Tests;
@@ -46,6 +47,17 @@ public class BackendTypeTests
         Assert.NotEqual(0, (int)BackendType.D3D11);
         Assert.NotEqual(0, (int)BackendType.Metal);
         Assert.NotEqual(0, (int)BackendType.OpenGL);
+        Assert.NotEqual(0, (int)BackendType.DmaBuf);
+    }
+
+    [Fact]
+    public void Values_match_c_abi()
+    {
+        Assert.Equal(0, (int)BackendType.Unknown);
+        Assert.Equal(1, (int)BackendType.D3D11);
+        Assert.Equal(2, (int)BackendType.Metal);
+        Assert.Equal(3, (int)BackendType.OpenGL);
+        Assert.Equal(4, (int)BackendType.DmaBuf);
     }
 }
 
@@ -58,17 +70,69 @@ public class TextureFormatTests
     }
 
     [Fact]
-    public void Rgba32Float_has_expected_value()
-    {
-        Assert.Equal(15, (int)TextureFormat.Rgba32Float);
-    }
-
-    [Fact]
     public void All_formats_have_distinct_values()
     {
         var values = Enum.GetValues<TextureFormat>();
         var distinct = new HashSet<int>(values.Select(v => (int)v));
         Assert.Equal(values.Length, distinct.Count);
+    }
+
+    [Fact]
+    public void Values_match_c_abi()
+    {
+        Assert.Equal(0, (int)TextureFormat.Unknown);
+        Assert.Equal(1, (int)TextureFormat.R8Unorm);
+        Assert.Equal(2, (int)TextureFormat.Rg8Unorm);
+        Assert.Equal(3, (int)TextureFormat.Rgb8Unorm);
+        Assert.Equal(4, (int)TextureFormat.Rgba8Unorm);
+        Assert.Equal(5, (int)TextureFormat.Bgra8Unorm);
+        Assert.Equal(6, (int)TextureFormat.Rgba8Srgb);
+        Assert.Equal(7, (int)TextureFormat.Bgra8Srgb);
+        Assert.Equal(8, (int)TextureFormat.R16Unorm);
+        Assert.Equal(9, (int)TextureFormat.Rg16Unorm);
+        Assert.Equal(10, (int)TextureFormat.Rgb16Unorm);
+        Assert.Equal(11, (int)TextureFormat.Rgba16Unorm);
+        Assert.Equal(12, (int)TextureFormat.R16Float);
+        Assert.Equal(13, (int)TextureFormat.Rg16Float);
+        Assert.Equal(14, (int)TextureFormat.Rgb16Float);
+        Assert.Equal(15, (int)TextureFormat.Rgba16Float);
+        Assert.Equal(16, (int)TextureFormat.R32Float);
+        Assert.Equal(17, (int)TextureFormat.Rg32Float);
+        Assert.Equal(18, (int)TextureFormat.Rgb32Float);
+        Assert.Equal(19, (int)TextureFormat.Rgba32Float);
+        Assert.Equal(20, (int)TextureFormat.R32Uint);
+        Assert.Equal(21, (int)TextureFormat.Rgba32Uint);
+        Assert.Equal(22, (int)TextureFormat.Rgb32Uint);
+        Assert.Equal(23, (int)TextureFormat.Depth32Float);
+    }
+
+    [Fact]
+    public void Has_24_values_matching_c_enum()
+    {
+        Assert.Equal(24, Enum.GetValues<TextureFormat>().Length);
+    }
+}
+
+public class TransferModeTests
+{
+    [Fact]
+    public void Values_match_c_abi()
+    {
+        Assert.Equal(0, (int)TransferMode.Unknown);
+        Assert.Equal(1, (int)TransferMode.ZeroCopySharedTexture);
+        Assert.Equal(2, (int)TransferMode.GpuCopy);
+        Assert.Equal(3, (int)TransferMode.CpuCopy);
+    }
+}
+
+public class SyncModeTests
+{
+    [Fact]
+    public void Values_match_c_abi()
+    {
+        Assert.Equal(0, (int)SyncMode.None);
+        Assert.Equal(1, (int)SyncMode.AccessGuarded);
+        Assert.Equal(2, (int)SyncMode.GpuFenceBestEffort);
     }
 }
 
@@ -148,6 +212,8 @@ public class FrameInfoTests
         Assert.Equal(0u, info.Height);
         Assert.Equal(TextureFormat.Unknown, info.Format);
         Assert.Equal(TextureFormat.Unknown, info.SemanticFormat);
+        Assert.Equal(TransferMode.Unknown, info.TransferMode);
+        Assert.Equal(SyncMode.None, info.SyncMode);
         Assert.Equal(0u, info.DroppedFrameCount);
     }
 
@@ -162,6 +228,8 @@ public class FrameInfoTests
             Height = 1080,
             Format = TextureFormat.Rgba32Float,
             SemanticFormat = TextureFormat.Rgba8Unorm,
+            TransferMode = TransferMode.ZeroCopySharedTexture,
+            SyncMode = SyncMode.AccessGuarded,
             DroppedFrameCount = 3,
         };
 
@@ -171,6 +239,8 @@ public class FrameInfoTests
         Assert.Equal(1080u, info.Height);
         Assert.Equal(TextureFormat.Rgba32Float, info.Format);
         Assert.Equal(TextureFormat.Rgba8Unorm, info.SemanticFormat);
+        Assert.Equal(TransferMode.ZeroCopySharedTexture, info.TransferMode);
+        Assert.Equal(SyncMode.AccessGuarded, info.SyncMode);
         Assert.Equal(3u, info.DroppedFrameCount);
     }
 }
@@ -222,6 +292,7 @@ public class ConnectedSenderInfoTests
         Assert.Equal(0.0, info.EstimatedFps);
         Assert.Equal(0ul, info.FrameCounter);
         Assert.Equal(0ul, info.LastUpdateTimeNs);
+        Assert.Equal(0ul, info.NativeFormatModifier);
     }
 
     [Fact]
@@ -240,6 +311,7 @@ public class ConnectedSenderInfoTests
             EstimatedFps = 60.0,
             FrameCounter = 100,
             LastUpdateTimeNs = 99999,
+            NativeFormatModifier = 0xdeadbeef,
         };
 
         Assert.Equal("test", info.Name);
@@ -249,6 +321,7 @@ public class ConnectedSenderInfoTests
         Assert.Equal(TextureFormat.Rgba16Float, info.SemanticFormat);
         Assert.Equal(60.0, info.EstimatedFps);
         Assert.Equal(100ul, info.FrameCounter);
+        Assert.Equal(0xdeadbeeful, info.NativeFormatModifier);
     }
 }
 
@@ -284,37 +357,152 @@ public class NativeReceiverTests
     }
 }
 
-public class NativeStructLayoutTests
+public class NativeFrameInfoLayoutTests
 {
     [Fact]
-    public void FrameInfo_has_semantic_format_property()
+    public void Size_matches_c_abi()
     {
-        var prop = typeof(FrameInfo).GetProperty("SemanticFormat");
-        Assert.NotNull(prop);
-        Assert.Equal(typeof(TextureFormat), prop.PropertyType);
+        Assert.Equal(48, Marshal.SizeOf<NativeMethods.FrameInfo>());
     }
 
     [Fact]
-    public void ConnectedSenderInfo_has_semantic_format_property()
+    public void Field_offsets_match_c_abi()
     {
-        var prop = typeof(ConnectedSenderInfo).GetProperty("SemanticFormat");
-        Assert.NotNull(prop);
-        Assert.Equal(typeof(TextureFormat), prop.PropertyType);
+        Assert.Equal(0, (int)Marshal.OffsetOf<NativeMethods.FrameInfo>("FrameIndex"));
+        Assert.Equal(8, (int)Marshal.OffsetOf<NativeMethods.FrameInfo>("TimestampNs"));
+        Assert.Equal(16, (int)Marshal.OffsetOf<NativeMethods.FrameInfo>("Width"));
+        Assert.Equal(20, (int)Marshal.OffsetOf<NativeMethods.FrameInfo>("Height"));
+        Assert.Equal(24, (int)Marshal.OffsetOf<NativeMethods.FrameInfo>("Format"));
+        Assert.Equal(28, (int)Marshal.OffsetOf<NativeMethods.FrameInfo>("SemanticFormat"));
+        Assert.Equal(32, (int)Marshal.OffsetOf<NativeMethods.FrameInfo>("TransferMode"));
+        Assert.Equal(36, (int)Marshal.OffsetOf<NativeMethods.FrameInfo>("SyncMode"));
+        Assert.Equal(40, (int)Marshal.OffsetOf<NativeMethods.FrameInfo>("DroppedFrameCount"));
     }
 
     [Fact]
-    public void FrameInfo_from_native_method_exists_compiles_with_semantic_format()
+    public void SemanticFormat_is_at_offset_28()
     {
-        var fromNative = typeof(FrameInfo).GetMethod("FromNative",
-            BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.NotNull(fromNative);
+        Assert.Equal(28, (int)Marshal.OffsetOf<NativeMethods.FrameInfo>("SemanticFormat"));
     }
 
     [Fact]
-    public void ConnectedSenderInfo_from_native_method_exists_compiles_with_semantic_format()
+    public void FromNative_maps_semantic_format()
     {
-        var fromNative = typeof(ConnectedSenderInfo).GetMethod("FromNative",
-            BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.NotNull(fromNative);
+        var native = new NativeMethods.FrameInfo
+        {
+            SemanticFormat = NativeMethods.TextureFormat.Rgba8Srgb,
+        };
+        var managed = FrameInfo.FromNative(native);
+        Assert.Equal(TextureFormat.Rgba8Srgb, managed.SemanticFormat);
+    }
+
+    [Fact]
+    public void FromNative_maps_transfer_mode()
+    {
+        var native = new NativeMethods.FrameInfo
+        {
+            TransferMode = NativeMethods.TransferMode.GpuCopy,
+        };
+        var managed = FrameInfo.FromNative(native);
+        Assert.Equal(TransferMode.GpuCopy, managed.TransferMode);
+    }
+
+    [Fact]
+    public void FromNative_maps_sync_mode()
+    {
+        var native = new NativeMethods.FrameInfo
+        {
+            SyncMode = NativeMethods.SyncMode.AccessGuarded,
+        };
+        var managed = FrameInfo.FromNative(native);
+        Assert.Equal(SyncMode.AccessGuarded, managed.SyncMode);
+    }
+
+    [Fact]
+    public void FromNative_maps_all_fields()
+    {
+        var native = new NativeMethods.FrameInfo
+        {
+            FrameIndex = 1,
+            TimestampNs = 2,
+            Width = 3,
+            Height = 4,
+            Format = NativeMethods.TextureFormat.Rgba8Unorm,
+            SemanticFormat = NativeMethods.TextureFormat.Rgba16Float,
+            TransferMode = NativeMethods.TransferMode.ZeroCopySharedTexture,
+            SyncMode = NativeMethods.SyncMode.GpuFenceBestEffort,
+            DroppedFrameCount = 7,
+        };
+        var managed = FrameInfo.FromNative(native);
+
+        Assert.Equal(1ul, managed.FrameIndex);
+        Assert.Equal(2ul, managed.TimestampNs);
+        Assert.Equal(3u, managed.Width);
+        Assert.Equal(4u, managed.Height);
+        Assert.Equal(TextureFormat.Rgba8Unorm, managed.Format);
+        Assert.Equal(TextureFormat.Rgba16Float, managed.SemanticFormat);
+        Assert.Equal(TransferMode.ZeroCopySharedTexture, managed.TransferMode);
+        Assert.Equal(SyncMode.GpuFenceBestEffort, managed.SyncMode);
+        Assert.Equal(7u, managed.DroppedFrameCount);
+    }
+}
+
+public class NativeConnectedSenderInfoLayoutTests
+{
+    [Fact]
+    public void Size_matches_c_abi()
+    {
+        Assert.Equal(80, Marshal.SizeOf<NativeMethods.ConnectedSenderInfo>());
+    }
+
+    [Fact]
+    public void Field_offsets_match_c_abi()
+    {
+        Assert.Equal(0, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("Name"));
+        Assert.Equal(8, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("ApplicationName"));
+        Assert.Equal(16, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("Id"));
+        Assert.Equal(24, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("Backend"));
+        Assert.Equal(28, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("Width"));
+        Assert.Equal(32, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("Height"));
+        Assert.Equal(36, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("Format"));
+        Assert.Equal(40, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("SemanticFormat"));
+        Assert.Equal(48, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("EstimatedFps"));
+        Assert.Equal(56, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("FrameCounter"));
+        Assert.Equal(64, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("LastUpdateTimeNs"));
+        Assert.Equal(72, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("NativeFormatModifier"));
+    }
+
+    [Fact]
+    public void SemanticFormat_is_at_offset_40()
+    {
+        Assert.Equal(40, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("SemanticFormat"));
+    }
+
+    [Fact]
+    public void FromNative_maps_semantic_format()
+    {
+        unsafe
+        {
+            var native = new NativeMethods.ConnectedSenderInfo
+            {
+                SemanticFormat = NativeMethods.TextureFormat.Rgba32Float,
+            };
+            var managed = ConnectedSenderInfo.FromNative(native);
+            Assert.Equal(TextureFormat.Rgba32Float, managed.SemanticFormat);
+        }
+    }
+
+    [Fact]
+    public void FromNative_maps_native_format_modifier()
+    {
+        unsafe
+        {
+            var native = new NativeMethods.ConnectedSenderInfo
+            {
+                NativeFormatModifier = 0x123456789ABCDEF0,
+            };
+            var managed = ConnectedSenderInfo.FromNative(native);
+            Assert.Equal(0x123456789ABCDEF0ul, managed.NativeFormatModifier);
+        }
     }
 }

@@ -11,6 +11,8 @@ public readonly struct FrameInfo
     public uint Height { get; init; }
     public TextureFormat Format { get; init; }
     public TextureFormat SemanticFormat { get; init; }
+    public TransferMode TransferMode { get; init; }
+    public SyncMode SyncMode { get; init; }
     public uint DroppedFrameCount { get; init; }
 
     internal static FrameInfo FromNative(NativeMethods.FrameInfo native)
@@ -23,6 +25,8 @@ public readonly struct FrameInfo
             Height = native.Height,
             Format = (TextureFormat)native.Format,
             SemanticFormat = (TextureFormat)native.SemanticFormat,
+            TransferMode = (TransferMode)native.TransferMode,
+            SyncMode = (SyncMode)native.SyncMode,
             DroppedFrameCount = native.DroppedFrameCount,
         };
     }
@@ -65,6 +69,7 @@ public readonly struct ConnectedSenderInfo
     public double EstimatedFps { get; init; }
     public ulong FrameCounter { get; init; }
     public ulong LastUpdateTimeNs { get; init; }
+    public ulong NativeFormatModifier { get; init; }
 
     public ConnectedSenderInfo() { }
 
@@ -85,6 +90,7 @@ public readonly struct ConnectedSenderInfo
                 EstimatedFps = native.EstimatedFps,
                 FrameCounter = native.FrameCounter,
                 LastUpdateTimeNs = native.LastUpdateTimeNs,
+                NativeFormatModifier = native.NativeFormatModifier,
             };
         }
     }

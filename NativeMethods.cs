@@ -43,6 +43,7 @@ internal static unsafe partial class NativeMethods
         D3D11 = 1,
         Metal = 2,
         OpenGL = 3,
+        DmaBuf = 4,
     }
 
     public enum TextureFormat : int
@@ -50,28 +51,48 @@ internal static unsafe partial class NativeMethods
         Unknown = 0,
         R8Unorm = 1,
         Rg8Unorm = 2,
-        Rgba8Unorm = 3,
-        Bgra8Unorm = 4,
-        Rgba8Srgb = 5,
-        Bgra8Srgb = 6,
-        R16Unorm = 7,
-        Rg16Unorm = 8,
-        Rgba16Unorm = 9,
-        R16Float = 10,
-        Rg16Float = 11,
-        Rgba16Float = 12,
-        R32Float = 13,
-        Rg32Float = 14,
-        Rgba32Float = 15,
-        R32Uint = 16,
-        Rgba32Uint = 17,
-        Depth32Float = 18,
+        Rgb8Unorm = 3,
+        Rgba8Unorm = 4,
+        Bgra8Unorm = 5,
+        Rgba8Srgb = 6,
+        Bgra8Srgb = 7,
+        R16Unorm = 8,
+        Rg16Unorm = 9,
+        Rgb16Unorm = 10,
+        Rgba16Unorm = 11,
+        R16Float = 12,
+        Rg16Float = 13,
+        Rgb16Float = 14,
+        Rgba16Float = 15,
+        R32Float = 16,
+        Rg32Float = 17,
+        Rgb32Float = 18,
+        Rgba32Float = 19,
+        R32Uint = 20,
+        Rgba32Uint = 21,
+        Rgb32Uint = 22,
+        Depth32Float = 23,
     }
 
     public enum ReceiveMode : int
     {
         LatestOnly = 0,
         SequentialBestEffort = 1,
+    }
+
+    public enum TransferMode : int
+    {
+        Unknown = 0,
+        ZeroCopySharedTexture = 1,
+        GpuCopy = 2,
+        CpuCopy = 3,
+    }
+
+    public enum SyncMode : int
+    {
+        None = 0,
+        AccessGuarded = 1,
+        GpuFenceBestEffort = 2,
     }
 
     public enum FrameStatus : int
@@ -92,6 +113,8 @@ internal static unsafe partial class NativeMethods
         public byte* ApplicationName;
         public uint RingBufferSize;
         public int AllowFormatFallback;
+        public uint FallbackFlags;
+        public int FallbackFlagsValid;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -133,6 +156,7 @@ internal static unsafe partial class NativeMethods
         public double EstimatedFps;
         public ulong FrameCounter;
         public ulong LastUpdateTimeNs;
+        public ulong NativeFormatModifier;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -144,6 +168,8 @@ internal static unsafe partial class NativeMethods
         public uint Height;
         public TextureFormat Format;
         public TextureFormat SemanticFormat;
+        public TransferMode TransferMode;
+        public SyncMode SyncMode;
         public uint DroppedFrameCount;
     }
 
