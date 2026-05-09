@@ -560,7 +560,7 @@ public class NativeMappedPixelsLayoutTests
     [Fact]
     public void RowStrideBytes_is_8_bytes()
     {
-        Assert.Equal(8, (int)Marshal.OffsetOf<NativeMethods.MappedPixels>("Origin") -
+        Assert.Equal(8, (int)Marshal.OffsetOf<NativeMethods.MappedPixels>("Width") -
                         (int)Marshal.OffsetOf<NativeMethods.MappedPixels>("RowStrideBytes"));
     }
 
