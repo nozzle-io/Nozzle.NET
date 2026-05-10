@@ -22,7 +22,6 @@ Console.WriteLine($"Sender created: {SenderName} ({Width}x{Height} {TextureForma
 var frameIndex = 0u;
 var interval = TimeSpan.FromSeconds(1.0 / Fps);
 var nextTime = DateTime.UtcNow;
-const int BytesPerPixel = sizeof(float) * 4;
 
 try
 {
