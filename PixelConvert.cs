@@ -29,7 +29,7 @@ public static class PixelConvert
         TextureFormat.Rgba32Uint => 16,
         TextureFormat.Rgb32Uint => 12,
         TextureFormat.Depth32Float => 4,
-        _ => throw new ArgumentOutOfRangeException(nameof(format), $"Unknown format: {format}"),
+        _ => -1,
     };
 
     private static void ValidateBufferSizes(
@@ -42,19 +42,30 @@ public static class PixelConvert
             return;
 
         if (srcRowBytes < minSrcRowBytes)
-            throw new ArgumentOutOfRangeException(nameof(srcRowBytes),
+            throw new NozzleException(ErrorCode.ErrorInvalidArgument,
                 $"srcRowBytes ({srcRowBytes}) is less than minimum ({minSrcRowBytes}) for width {width}");
         if (dstRowBytes < minDstRowBytes)
-            throw new ArgumentOutOfRangeException(nameof(dstRowBytes),
+            throw new NozzleException(ErrorCode.ErrorInvalidArgument,
                 $"dstRowBytes ({dstRowBytes}) is less than minimum ({minDstRowBytes}) for width {width}");
 
-        long srcRequired = checked((long)(height - 1) * srcRowBytes + minSrcRowBytes);
-        long dstRequired = checked((long)(height - 1) * dstRowBytes + minDstRowBytes);
+        long srcRequired;
+        long dstRequired;
+        try
+        {
+            srcRequired = checked((long)(height - 1) * srcRowBytes + minSrcRowBytes);
+            dstRequired = checked((long)(height - 1) * dstRowBytes + minDstRowBytes);
+        }
+        catch (OverflowException)
+        {
+            throw new NozzleException(ErrorCode.ErrorInvalidArgument, "Buffer size calculation overflow");
+        }
 
         if (src.Length < srcRequired)
-            throw new ArgumentException($"Source span length ({src.Length}) is less than required ({srcRequired})", nameof(src));
+            throw new NozzleException(ErrorCode.ErrorInvalidArgument,
+                $"Source span length ({src.Length}) is less than required ({srcRequired})");
         if (dst.Length < dstRequired)
-            throw new ArgumentException($"Destination span length ({dst.Length}) is less than required ({dstRequired})", nameof(dst));
+            throw new NozzleException(ErrorCode.ErrorInvalidArgument,
+                $"Destination span length ({dst.Length}) is less than required ({dstRequired})");
     }
 
     public static void SwizzleChannels(
@@ -64,7 +75,19 @@ public static class PixelConvert
         TextureFormat format, (byte R, byte G, byte B, byte A) permuteMap)
     {
         var bpp = BytesPerPixel(format);
-        var minRowBytes = checked(width * (uint)bpp);
+        if (bpp < 0)
+            throw new NozzleException(ErrorCode.ErrorInvalidArgument, $"Unknown format: {format}");
+
+        uint minRowBytes;
+        try
+        {
+            minRowBytes = checked(width * (uint)bpp);
+        }
+        catch (OverflowException)
+        {
+            throw new NozzleException(ErrorCode.ErrorInvalidArgument, "Row size calculation overflow");
+        }
+
         ValidateBufferSizes(src, dst, width, height, srcRowBytes, dstRowBytes, minRowBytes, minRowBytes);
 
         unsafe
@@ -91,8 +114,19 @@ public static class PixelConvert
         uint channels)
     {
         ValidateChannelCount(channels);
-        var minSrcRow = checked(width * channels * 2u);
-        var minDstRow = checked(width * channels * 4u);
+
+        uint minSrcRow;
+        uint minDstRow;
+        try
+        {
+            minSrcRow = checked(width * channels * 2u);
+            minDstRow = checked(width * channels * 4u);
+        }
+        catch (OverflowException)
+        {
+            throw new NozzleException(ErrorCode.ErrorInvalidArgument, "Row size calculation overflow");
+        }
+
         ValidateBufferSizes(src, dst, width, height, srcRowBytes, dstRowBytes, minSrcRow, minDstRow);
 
         unsafe
@@ -113,7 +147,17 @@ public static class PixelConvert
         uint channels)
     {
         ValidateChannelCount(channels);
-        var minRow = checked(width * channels * 4u);
+
+        uint minRow;
+        try
+        {
+            minRow = checked(width * channels * 4u);
+        }
+        catch (OverflowException)
+        {
+            throw new NozzleException(ErrorCode.ErrorInvalidArgument, "Row size calculation overflow");
+        }
+
         ValidateBufferSizes(src, dst, width, height, srcRowBytes, dstRowBytes, minRow, minRow);
 
         unsafe
@@ -134,8 +178,19 @@ public static class PixelConvert
         uint channels)
     {
         ValidateChannelCount(channels);
-        var minSrcRow = checked(width * channels * 2u);
-        var minDstRow = checked(width * channels * 4u);
+
+        uint minSrcRow;
+        uint minDstRow;
+        try
+        {
+            minSrcRow = checked(width * channels * 2u);
+            minDstRow = checked(width * channels * 4u);
+        }
+        catch (OverflowException)
+        {
+            throw new NozzleException(ErrorCode.ErrorInvalidArgument, "Row size calculation overflow");
+        }
+
         ValidateBufferSizes(src, dst, width, height, srcRowBytes, dstRowBytes, minSrcRow, minDstRow);
 
         unsafe
@@ -152,6 +207,7 @@ public static class PixelConvert
     private static void ValidateChannelCount(uint channels)
     {
         if (channels is < 1 or > 4)
-            throw new ArgumentOutOfRangeException(nameof(channels), $"Channel count must be 1-4, got {channels}");
+            throw new NozzleException(ErrorCode.ErrorInvalidArgument,
+                $"Channel count must be 1-4, got {channels}");
     }
 }

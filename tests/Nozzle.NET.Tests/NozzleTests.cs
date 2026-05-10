@@ -754,83 +754,93 @@ public class PixelConvertValidationTests
     [Fact]
     public void WidenUInt16_source_too_small()
     {
-        Assert.Throws<ArgumentException>(() =>
+        var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.WidenUInt16ToUInt32(s_small, s_big, width: 1, height: 1,
                 srcRowBytes: 2, dstRowBytes: 4, channels: 1));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
     }
 
     [Fact]
     public void WidenUInt16_destination_too_small()
     {
-        Assert.Throws<ArgumentException>(() =>
+        var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.WidenUInt16ToUInt32(s_big, s_small, width: 1, height: 1,
                 srcRowBytes: 2, dstRowBytes: 4, channels: 1));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
     }
 
     [Fact]
     public void WidenUInt16_src_row_bytes_too_small()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.WidenUInt16ToUInt32(s_big, s_big, width: 4, height: 1,
                 srcRowBytes: 4, dstRowBytes: 16, channels: 1));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
     }
 
     [Fact]
     public void WidenUInt16_dst_row_bytes_too_small()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.WidenUInt16ToUInt32(s_big, s_big, width: 4, height: 1,
                 srcRowBytes: 8, dstRowBytes: 8, channels: 1));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
     }
 
     [Fact]
     public void WidenUInt16_invalid_channels_zero()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.WidenUInt16ToUInt32(s_big, s_big, width: 1, height: 1,
                 srcRowBytes: 2, dstRowBytes: 4, channels: 0));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
     }
 
     [Fact]
     public void WidenUInt16_invalid_channels_five()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.WidenUInt16ToUInt32(s_big, s_big, width: 1, height: 1,
                 srcRowBytes: 2, dstRowBytes: 4, channels: 5));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
     }
 
     [Fact]
     public void SwizzleChannels_unknown_format_throws()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.SwizzleChannels(s_big, s_big, width: 1, height: 1,
                 srcRowBytes: 1, dstRowBytes: 1,
                 format: TextureFormat.Unknown, permuteMap: (0, 1, 2, 3)));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
     }
 
     [Fact]
     public void SwizzleChannels_source_too_small()
     {
-        Assert.Throws<ArgumentException>(() =>
+        var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.SwizzleChannels(s_small, s_big, width: 1, height: 1,
                 srcRowBytes: 4, dstRowBytes: 4,
                 format: TextureFormat.Rgba8Unorm, permuteMap: (0, 1, 2, 3)));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
     }
 
     [Fact]
     public void WidenHalfToFloat_source_too_small()
     {
-        Assert.Throws<ArgumentException>(() =>
+        var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.WidenHalfToFloat(s_small, s_big, width: 1, height: 1,
                 srcRowBytes: 2, dstRowBytes: 4, channels: 1));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
     }
 
     [Fact]
     public void ConvertUInt32ToFloat32_source_too_small()
     {
-        Assert.Throws<ArgumentException>(() =>
+        var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.ConvertUInt32ToFloat32(s_small, s_big, width: 1, height: 1,
                 srcRowBytes: 4, dstRowBytes: 4, channels: 1));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
     }
 
     [Fact]
@@ -854,20 +864,22 @@ public class PixelConvertValidationTests
     [Fact]
     public void Width_channels_multiplication_overflow()
     {
-        Assert.Throws<OverflowException>(() =>
+        var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.WidenUInt16ToUInt32(s_big, s_big,
                 width: uint.MaxValue, height: 1,
                 srcRowBytes: uint.MaxValue, dstRowBytes: uint.MaxValue, channels: 2));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
     }
 
     [Fact]
     public void Swizzle_width_bpp_multiplication_overflow()
     {
-        Assert.Throws<OverflowException>(() =>
+        var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.SwizzleChannels(s_big, s_big,
                 width: uint.MaxValue, height: 1,
                 srcRowBytes: uint.MaxValue, dstRowBytes: uint.MaxValue,
                 format: TextureFormat.Rgba8Unorm, permuteMap: (0, 1, 2, 3)));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
     }
 }
 
