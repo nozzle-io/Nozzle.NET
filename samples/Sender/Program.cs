@@ -36,9 +36,10 @@ try
         nextTime = now + interval;
 
         using var frame = sender.AcquireWritableFrame(Width, Height, TextureFormat.Rgba32Float);
-        var pixels = frame.LockWritablePixels();
-        FillGradient(pixels, frameIndex);
-        frame.UnlockWritablePixels();
+        {
+            using var map = frame.LockWritablePixels();
+            FillGradient(map, frameIndex);
+        }
         sender.CommitFrame(frame);
 
         frameIndex++;
@@ -54,19 +55,19 @@ finally
     Console.WriteLine("Sender shut down.");
 }
 
-unsafe void FillGradient(MappedPixels pixels, uint frameIndex)
+unsafe void FillGradient(MappedPixelHandle map, uint frameIndex)
 {
     float t = frameIndex / (Fps * 10.0f);
-    long stride = pixels.RowStrideBytes;
-    byte* ptr = (byte*)pixels.Data;
+    long stride = map.RowStrideBytes;
+    byte* ptr = (byte*)map.Data;
 
-    for (uint y = 0; y < pixels.Height; y++)
+    for (uint y = 0; y < map.Height; y++)
     {
-        for (uint x = 0; x < pixels.Width; x++)
+        for (uint x = 0; x < map.Width; x++)
         {
-            float r = (float)Math.Sin(x / (double)pixels.Width * Math.PI * 2.0 + t) * 0.5f + 0.5f;
-            float g = (float)Math.Sin(y / (double)pixels.Height * Math.PI * 2.0 + t * 0.7f) * 0.5f + 0.5f;
-            float b = (float)Math.Sin((x + y) / (double)(pixels.Width + pixels.Height) * Math.PI * 2.0 + t * 1.3f) * 0.5f + 0.5f;
+            float r = (float)Math.Sin(x / (double)map.Width * Math.PI * 2.0 + t) * 0.5f + 0.5f;
+            float g = (float)Math.Sin(y / (double)map.Height * Math.PI * 2.0 + t * 0.7f) * 0.5f + 0.5f;
+            float b = (float)Math.Sin((x + y) / (double)(map.Width + map.Height) * Math.PI * 2.0 + t * 1.3f) * 0.5f + 0.5f;
             float a = 1.0f;
 
             byte* pixel = ptr + y * stride + x * 16;
