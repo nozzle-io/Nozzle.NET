@@ -37,7 +37,7 @@ public sealed class Sender : IDisposable
         }
     }
 
-    public static uint ResolveFallbackFlags(string name, string applicationName, uint ringBufferSize = 3, bool allowFormatFallback = false)
+    public static FallbackFlags ResolveFallbackFlags(string name, string applicationName, uint ringBufferSize = 3, bool allowFormatFallback = false)
     {
         unsafe
         {
@@ -57,24 +57,24 @@ public sealed class Sender : IDisposable
 
                 uint flags;
                 ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_resolve_fallback_flags(&desc, &flags));
-                return flags;
+                return (FallbackFlags)flags;
             }
         }
     }
 
-    public static uint ValidateFallbackFlags(uint fallbackFlags)
+    public static FallbackFlags ResolveFallbackFlags(FallbackFlags callerHint)
     {
         unsafe
         {
             var desc = new NativeMethods.SenderDesc
             {
-                FallbackFlags = fallbackFlags,
+                FallbackFlags = (uint)callerHint,
                 FallbackFlagsValid = 1,
             };
 
             uint flags;
             ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_resolve_fallback_flags(&desc, &flags));
-            return flags;
+            return (FallbackFlags)flags;
         }
     }
 

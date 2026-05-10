@@ -696,11 +696,23 @@ public class FallbackFlagsTests
     [Fact]
     public void Values_match_c_abi()
     {
-        Assert.Equal(0u, FallbackFlags.None);
-        Assert.Equal(1u, FallbackFlags.StorageCompatible);
-        Assert.Equal(2u, FallbackFlags.ChannelExpansion);
-        Assert.Equal(4u, FallbackFlags.QualityLoss);
-        Assert.Equal(3u, FallbackFlags.SafeDefaults);
+        Assert.Equal((uint)0, (uint)FallbackFlags.None);
+        Assert.Equal((uint)1, (uint)FallbackFlags.StorageCompatible);
+        Assert.Equal((uint)2, (uint)FallbackFlags.ChannelExpansion);
+        Assert.Equal((uint)4, (uint)FallbackFlags.QualityLoss);
+        Assert.Equal((uint)3, (uint)FallbackFlags.SafeDefaults);
+    }
+
+    [Fact]
+    public void Has_flags_enum_attribute()
+    {
+        Assert.NotNull(typeof(FallbackFlags).GetCustomAttributes(typeof(FlagsAttribute), false));
+    }
+
+    [Fact]
+    public void Underlying_type_is_uint()
+    {
+        Assert.Equal(typeof(uint), Enum.GetUnderlyingType(typeof(FallbackFlags)));
     }
 }
 
@@ -716,13 +728,21 @@ public class PixelConvertApiTests
     }
 
     [Fact]
-    public void Public_parameters_use_nint_not_void_pointer()
+    public void Pointer_parameters_use_nint()
     {
-        var method = typeof(PixelConvert).GetMethod("SwizzleChannels")!;
+        var method = typeof(PixelConvert).GetMethod("WidenUInt16ToUInt32")!;
         var parameters = method.GetParameters();
         Assert.Equal(typeof(nint), parameters[0].ParameterType);
         Assert.Equal(typeof(nint), parameters[1].ParameterType);
-        Assert.Equal(typeof(nint), parameters[7].ParameterType);
+    }
+
+    [Fact]
+    public void PermuteMap_uses_tuple()
+    {
+        var method = typeof(PixelConvert).GetMethod("SwizzleChannels")!;
+        var permuteParam = method.GetParameters()[7];
+        Assert.True(permuteParam.ParameterType.IsGenericType);
+        Assert.Equal(typeof(byte), permuteParam.ParameterType.GetGenericArguments()[0]);
     }
 }
 

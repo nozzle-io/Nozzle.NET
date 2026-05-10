@@ -106,11 +106,12 @@ public enum NativeFormatKind
     GlInternalFormat = 4,
 }
 
-public static class FallbackFlags
+[Flags]
+public enum FallbackFlags : uint
 {
-    public const uint None = 0;
-    public const uint StorageCompatible = 1u << 0;
-    public const uint ChannelExpansion = 1u << 1;
-    public const uint QualityLoss = 1u << 2;
-    public const uint SafeDefaults = StorageCompatible | ChannelExpansion;
+    None = 0,
+    StorageCompatible = 1u << 0,
+    ChannelExpansion = 1u << 1,
+    QualityLoss = 1u << 2,
+    SafeDefaults = StorageCompatible | ChannelExpansion,
 }

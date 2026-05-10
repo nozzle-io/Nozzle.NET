@@ -6,13 +6,18 @@ public static class PixelConvert
         nint src, nint dst,
         uint width, uint height,
         uint srcRowBytes, uint dstRowBytes,
-        TextureFormat format, nint permuteMap)
+        TextureFormat format, (byte R, byte G, byte B, byte A) permuteMap)
     {
         unsafe
         {
+            byte* map = stackalloc byte[4];
+            map[0] = permuteMap.R;
+            map[1] = permuteMap.G;
+            map[2] = permuteMap.B;
+            map[3] = permuteMap.A;
             ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_swizzle_channels(
                 (void*)src, (void*)dst, width, height, srcRowBytes, dstRowBytes,
-                (NativeMethods.TextureFormat)format, (byte*)permuteMap));
+                (NativeMethods.TextureFormat)format, map));
         }
     }
 
