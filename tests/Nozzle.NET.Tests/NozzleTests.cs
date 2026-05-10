@@ -850,6 +850,25 @@ public class PixelConvertValidationTests
             // native library not loaded — managed validation passed
         }
     }
+
+    [Fact]
+    public void Width_channels_multiplication_overflow()
+    {
+        Assert.Throws<OverflowException>(() =>
+            PixelConvert.WidenUInt16ToUInt32(s_big, s_big,
+                width: uint.MaxValue, height: 1,
+                srcRowBytes: uint.MaxValue, dstRowBytes: uint.MaxValue, channels: 2));
+    }
+
+    [Fact]
+    public void Swizzle_width_bpp_multiplication_overflow()
+    {
+        Assert.Throws<OverflowException>(() =>
+            PixelConvert.SwizzleChannels(s_big, s_big,
+                width: uint.MaxValue, height: 1,
+                srcRowBytes: uint.MaxValue, dstRowBytes: uint.MaxValue,
+                format: TextureFormat.Rgba8Unorm, permuteMap: (0, 1, 2, 3)));
+    }
 }
 
 public class NativeSenderDescLayoutTests
