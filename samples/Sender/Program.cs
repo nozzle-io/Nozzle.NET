@@ -57,7 +57,7 @@ finally
 unsafe void FillGradient(MappedPixels pixels, uint frameIndex)
 {
     float t = frameIndex / (Fps * 10.0f);
-    int stride = (int)pixels.RowStrideBytes;
+    long stride = pixels.RowStrideBytes;
     byte* ptr = (byte*)pixels.Data;
 
     for (uint y = 0; y < pixels.Height; y++)
@@ -69,20 +69,20 @@ unsafe void FillGradient(MappedPixels pixels, uint frameIndex)
             float b = (float)Math.Sin((x + y) / (double)(pixels.Width + pixels.Height) * Math.PI * 2.0 + t * 1.3f) * 0.5f + 0.5f;
             float a = 1.0f;
 
-            int offset = (int)(y * stride + x * 16);
-            WriteFloat(ptr, offset, r);
-            WriteFloat(ptr, offset + 4, g);
-            WriteFloat(ptr, offset + 8, b);
-            WriteFloat(ptr, offset + 12, a);
+            byte* pixel = ptr + y * stride + x * 16;
+            WriteFloat(pixel, 0, r);
+            WriteFloat(pixel, 4, g);
+            WriteFloat(pixel, 8, b);
+            WriteFloat(pixel, 12, a);
         }
     }
 }
 
-static unsafe void WriteFloat(byte* buffer, int offset, float value)
+static unsafe void WriteFloat(byte* pixel, int offset, float value)
 {
     var bytes = BitConverter.GetBytes(value);
-    buffer[offset] = bytes[0];
-    buffer[offset + 1] = bytes[1];
-    buffer[offset + 2] = bytes[2];
-    buffer[offset + 3] = bytes[3];
+    pixel[offset] = bytes[0];
+    pixel[offset + 1] = bytes[1];
+    pixel[offset + 2] = bytes[2];
+    pixel[offset + 3] = bytes[3];
 }
