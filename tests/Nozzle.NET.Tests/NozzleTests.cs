@@ -957,35 +957,32 @@ public class SenderCreateFallbackFlagsTests
 
 public class SenderDescMappingTests
 {
-    private static NativeMethods.SenderDesc BuildDesc(
+    private static unsafe NativeMethods.SenderDesc BuildDesc(
         uint ringBufferSize = 3, bool allowFormatFallback = false,
         FallbackFlags? fallbackFlags = null)
     {
-        unsafe
-        {
-            byte name = 0;
-            byte app = 0;
-            return Sender.BuildSenderDesc((IntPtr)&name, (IntPtr)&app,
-                ringBufferSize, allowFormatFallback, fallbackFlags);
-        }
+        byte name = 0;
+        byte app = 0;
+        return Sender.BuildSenderDesc(&name, &app,
+            ringBufferSize, allowFormatFallback, fallbackFlags);
     }
 
     [Fact]
     public void Unspecified_fallback_sets_allow_format_fallback_false()
     {
         var desc = BuildDesc(allowFormatFallback: false, fallbackFlags: null);
-        Assert.Equal(0u, desc.AllowFormatFallback);
+        Assert.Equal(0, desc.AllowFormatFallback);
         Assert.Equal(0u, desc.FallbackFlags);
-        Assert.Equal(0u, desc.FallbackFlagsValid);
+        Assert.Equal(0, desc.FallbackFlagsValid);
     }
 
     [Fact]
     public void Unspecified_fallback_with_allow_true()
     {
         var desc = BuildDesc(allowFormatFallback: true, fallbackFlags: null);
-        Assert.Equal(1u, desc.AllowFormatFallback);
+        Assert.Equal(1, desc.AllowFormatFallback);
         Assert.Equal(0u, desc.FallbackFlags);
-        Assert.Equal(0u, desc.FallbackFlagsValid);
+        Assert.Equal(0, desc.FallbackFlagsValid);
     }
 
     [Fact]
@@ -994,8 +991,8 @@ public class SenderDescMappingTests
         var desc = BuildDesc(fallbackFlags: FallbackFlags.None);
         Assert.Equal(0u, (uint)FallbackFlags.None);
         Assert.Equal(0u, desc.FallbackFlags);
-        Assert.Equal(1u, desc.FallbackFlagsValid);
-        Assert.Equal(0u, desc.AllowFormatFallback);
+        Assert.Equal(1, desc.FallbackFlagsValid);
+        Assert.Equal(0, desc.AllowFormatFallback);
     }
 
     [Fact]
@@ -1003,7 +1000,7 @@ public class SenderDescMappingTests
     {
         var desc = BuildDesc(fallbackFlags: FallbackFlags.SafeDefaults);
         Assert.Equal((uint)FallbackFlags.SafeDefaults, desc.FallbackFlags);
-        Assert.Equal(1u, desc.FallbackFlagsValid);
+        Assert.Equal(1, desc.FallbackFlagsValid);
     }
 
     [Fact]
@@ -1011,8 +1008,8 @@ public class SenderDescMappingTests
     {
         var desc = BuildDesc(allowFormatFallback: true, fallbackFlags: FallbackFlags.StorageCompatible);
         Assert.Equal((uint)FallbackFlags.StorageCompatible, desc.FallbackFlags);
-        Assert.Equal(1u, desc.FallbackFlagsValid);
-        Assert.Equal(0u, desc.AllowFormatFallback);
+        Assert.Equal(1, desc.FallbackFlagsValid);
+        Assert.Equal(0, desc.AllowFormatFallback);
     }
 
     [Fact]
