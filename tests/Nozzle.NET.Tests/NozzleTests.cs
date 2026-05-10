@@ -769,9 +769,9 @@ public class NativeSenderDescLayoutTests
 public class SenderResolveFallbackFlagsApiTests
 {
     [Fact]
-    public void String_overload_exists()
+    public void Bool_overload_exists()
     {
-        var method = typeof(Sender).GetMethod("ResolveFallbackFlags", new[] { typeof(string), typeof(string), typeof(uint), typeof(bool) });
+        var method = typeof(Sender).GetMethod("ResolveFallbackFlags", new[] { typeof(bool) });
         Assert.NotNull(method);
         Assert.Equal(typeof(FallbackFlags), method.ReturnType);
     }
