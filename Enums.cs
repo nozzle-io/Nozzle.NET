@@ -105,3 +105,12 @@ public enum NativeFormatKind
     DrmFourcc = 3,
     GlInternalFormat = 4,
 }
+
+public static class FallbackFlags
+{
+    public const uint None = 0;
+    public const uint StorageCompatible = 1u << 0;
+    public const uint ChannelExpansion = 1u << 1;
+    public const uint QualityLoss = 1u << 2;
+    public const uint SafeDefaults = StorageCompatible | ChannelExpansion;
+}

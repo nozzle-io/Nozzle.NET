@@ -62,6 +62,22 @@ public sealed class Sender : IDisposable
         }
     }
 
+    public static uint ValidateFallbackFlags(uint fallbackFlags)
+    {
+        unsafe
+        {
+            var desc = new NativeMethods.SenderDesc
+            {
+                FallbackFlags = fallbackFlags,
+                FallbackFlagsValid = 1,
+            };
+
+            uint flags;
+            ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_resolve_fallback_flags(&desc, &flags));
+            return flags;
+        }
+    }
+
     public Frame AcquireWritableFrame(uint width, uint height, TextureFormat format)
     {
         unsafe

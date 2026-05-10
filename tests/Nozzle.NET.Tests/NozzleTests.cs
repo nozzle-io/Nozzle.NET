@@ -670,3 +670,58 @@ public class NativeResolvedTextureFormatLayoutTests
         Assert.Equal(4, managed.BytesPerPixel);
     }
 }
+
+public class ResolvedTextureFormatDefaultTests
+{
+    [Fact]
+    public void Default_values_are_zero()
+    {
+        var fmt = new ResolvedTextureFormat();
+        Assert.Equal(TextureFormat.Unknown, fmt.StorageFormat);
+        Assert.Equal(TextureFormat.Unknown, fmt.SemanticFormat);
+        Assert.Equal(FormatSource.Unknown, fmt.FormatSource);
+        Assert.Equal(BackendType.Unknown, fmt.NativeBackend);
+        Assert.Equal(NativeFormatKind.Unknown, fmt.NativeKind);
+        Assert.Equal(0u, fmt.NativeValue);
+        Assert.Equal(0u, fmt.ChannelOrder);
+        Assert.Equal(0u, fmt.ComponentType);
+        Assert.Equal((byte)0, fmt.ComponentBits);
+        Assert.Equal((byte)0, fmt.ChannelCount);
+        Assert.Equal((byte)0, fmt.BytesPerPixel);
+    }
+}
+
+public class FallbackFlagsTests
+{
+    [Fact]
+    public void Values_match_c_abi()
+    {
+        Assert.Equal(0u, FallbackFlags.None);
+        Assert.Equal(1u, FallbackFlags.StorageCompatible);
+        Assert.Equal(2u, FallbackFlags.ChannelExpansion);
+        Assert.Equal(4u, FallbackFlags.QualityLoss);
+        Assert.Equal(3u, FallbackFlags.SafeDefaults);
+    }
+}
+
+public class PixelConvertApiTests
+{
+    [Fact]
+    public void Public_methods_exist()
+    {
+        Assert.NotNull(typeof(PixelConvert).GetMethod("SwizzleChannels"));
+        Assert.NotNull(typeof(PixelConvert).GetMethod("WidenUInt16ToUInt32"));
+        Assert.NotNull(typeof(PixelConvert).GetMethod("ConvertUInt32ToFloat32"));
+        Assert.NotNull(typeof(PixelConvert).GetMethod("WidenHalfToFloat"));
+    }
+
+    [Fact]
+    public void Public_parameters_use_nint_not_void_pointer()
+    {
+        var method = typeof(PixelConvert).GetMethod("SwizzleChannels")!;
+        var parameters = method.GetParameters();
+        Assert.Equal(typeof(nint), parameters[0].ParameterType);
+        Assert.Equal(typeof(nint), parameters[1].ParameterType);
+        Assert.Equal(typeof(nint), parameters[7].ParameterType);
+    }
+}
