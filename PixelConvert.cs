@@ -4,49 +4,45 @@ namespace Nozzle;
 
 public static class PixelConvert
 {
-    private static int BytesPerPixel(TextureFormat format) => format switch
+    private static int SwizzleBytesPerPixel(TextureFormat format) => format switch
     {
-        TextureFormat.R8Unorm => 1,
-        TextureFormat.Rg8Unorm => 2,
         TextureFormat.Rgb8Unorm => 3,
         TextureFormat.Rgba8Unorm => 4,
         TextureFormat.Bgra8Unorm => 4,
         TextureFormat.Rgba8Srgb => 4,
         TextureFormat.Bgra8Srgb => 4,
-        TextureFormat.R16Unorm => 2,
-        TextureFormat.Rg16Unorm => 4,
         TextureFormat.Rgb16Unorm => 6,
-        TextureFormat.Rgba16Unorm => 8,
-        TextureFormat.R16Float => 2,
-        TextureFormat.Rg16Float => 4,
         TextureFormat.Rgb16Float => 6,
-        TextureFormat.Rgba16Float => 8,
-        TextureFormat.R32Float => 4,
-        TextureFormat.Rg32Float => 8,
         TextureFormat.Rgb32Float => 12,
-        TextureFormat.Rgba32Float => 16,
-        TextureFormat.R32Uint => 4,
-        TextureFormat.Rgba32Uint => 16,
         TextureFormat.Rgb32Uint => 12,
-        TextureFormat.Depth32Float => 4,
+        TextureFormat.Rgba32Float => 16,
         _ => -1,
     };
 
+    private static void ValidateDimensions(uint width, uint height)
+    {
+        if (width == 0 || height == 0)
+            throw new NozzleException(ErrorCode.ErrorInvalidArgument, "dimensions must be non-zero");
+    }
+
+    private static void ValidatePermuteMap((byte R, byte G, byte B, byte A) permuteMap)
+    {
+        if (permuteMap.R > 3 || permuteMap.G > 3 || permuteMap.B > 3 || permuteMap.A > 3)
+            throw new NozzleException(ErrorCode.ErrorInvalidArgument, "permuteMap values must be 0-3");
+    }
+
     private static void ValidateBufferSizes(
         ReadOnlySpan<byte> src, Span<byte> dst,
-        uint width, uint height,
+        uint height,
         uint srcRowBytes, uint dstRowBytes,
         uint minSrcRowBytes, uint minDstRowBytes)
     {
-        if (height == 0)
-            return;
-
         if (srcRowBytes < minSrcRowBytes)
             throw new NozzleException(ErrorCode.ErrorInvalidArgument,
-                $"srcRowBytes ({srcRowBytes}) is less than minimum ({minSrcRowBytes}) for width {width}");
+                $"srcRowBytes ({srcRowBytes}) is less than minimum ({minSrcRowBytes})");
         if (dstRowBytes < minDstRowBytes)
             throw new NozzleException(ErrorCode.ErrorInvalidArgument,
-                $"dstRowBytes ({dstRowBytes}) is less than minimum ({minDstRowBytes}) for width {width}");
+                $"dstRowBytes ({dstRowBytes}) is less than minimum ({minDstRowBytes})");
 
         long srcRequired;
         long dstRequired;
@@ -74,9 +70,13 @@ public static class PixelConvert
         uint srcRowBytes, uint dstRowBytes,
         TextureFormat format, (byte R, byte G, byte B, byte A) permuteMap)
     {
-        var bpp = BytesPerPixel(format);
+        ValidateDimensions(width, height);
+        ValidatePermuteMap(permuteMap);
+
+        var bpp = SwizzleBytesPerPixel(format);
         if (bpp < 0)
-            throw new NozzleException(ErrorCode.ErrorInvalidArgument, $"Unknown format: {format}");
+            throw new NozzleException(ErrorCode.ErrorUnsupportedFormat,
+                $"Format {format} is not supported for swizzle");
 
         uint minRowBytes;
         try
@@ -88,7 +88,7 @@ public static class PixelConvert
             throw new NozzleException(ErrorCode.ErrorInvalidArgument, "Row size calculation overflow");
         }
 
-        ValidateBufferSizes(src, dst, width, height, srcRowBytes, dstRowBytes, minRowBytes, minRowBytes);
+        ValidateBufferSizes(src, dst, height, srcRowBytes, dstRowBytes, minRowBytes, minRowBytes);
 
         unsafe
         {
@@ -113,6 +113,7 @@ public static class PixelConvert
         uint srcRowBytes, uint dstRowBytes,
         uint channels)
     {
+        ValidateDimensions(width, height);
         ValidateChannelCount(channels);
 
         uint minSrcRow;
@@ -127,7 +128,7 @@ public static class PixelConvert
             throw new NozzleException(ErrorCode.ErrorInvalidArgument, "Row size calculation overflow");
         }
 
-        ValidateBufferSizes(src, dst, width, height, srcRowBytes, dstRowBytes, minSrcRow, minDstRow);
+        ValidateBufferSizes(src, dst, height, srcRowBytes, dstRowBytes, minSrcRow, minDstRow);
 
         unsafe
         {
@@ -146,6 +147,7 @@ public static class PixelConvert
         uint srcRowBytes, uint dstRowBytes,
         uint channels)
     {
+        ValidateDimensions(width, height);
         ValidateChannelCount(channels);
 
         uint minRow;
@@ -158,7 +160,7 @@ public static class PixelConvert
             throw new NozzleException(ErrorCode.ErrorInvalidArgument, "Row size calculation overflow");
         }
 
-        ValidateBufferSizes(src, dst, width, height, srcRowBytes, dstRowBytes, minRow, minRow);
+        ValidateBufferSizes(src, dst, height, srcRowBytes, dstRowBytes, minRow, minRow);
 
         unsafe
         {
@@ -177,6 +179,7 @@ public static class PixelConvert
         uint srcRowBytes, uint dstRowBytes,
         uint channels)
     {
+        ValidateDimensions(width, height);
         ValidateChannelCount(channels);
 
         uint minSrcRow;
@@ -191,7 +194,7 @@ public static class PixelConvert
             throw new NozzleException(ErrorCode.ErrorInvalidArgument, "Row size calculation overflow");
         }
 
-        ValidateBufferSizes(src, dst, width, height, srcRowBytes, dstRowBytes, minSrcRow, minDstRow);
+        ValidateBufferSizes(src, dst, height, srcRowBytes, dstRowBytes, minSrcRow, minDstRow);
 
         unsafe
         {

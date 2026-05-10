@@ -806,13 +806,23 @@ public class PixelConvertValidationTests
     }
 
     [Fact]
+    public void SwizzleChannels_unsupported_format_throws()
+    {
+        var ex = Assert.Throws<NozzleException>(() =>
+            PixelConvert.SwizzleChannels(s_big, s_big, width: 1, height: 1,
+                srcRowBytes: 4, dstRowBytes: 4,
+                format: TextureFormat.R8Unorm, permuteMap: (0, 1, 2, 3)));
+        Assert.Equal(ErrorCode.ErrorUnsupportedFormat, ex.ErrorCode);
+    }
+
+    [Fact]
     public void SwizzleChannels_unknown_format_throws()
     {
         var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.SwizzleChannels(s_big, s_big, width: 1, height: 1,
                 srcRowBytes: 1, dstRowBytes: 1,
                 format: TextureFormat.Unknown, permuteMap: (0, 1, 2, 3)));
-        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
+        Assert.Equal(ErrorCode.ErrorUnsupportedFormat, ex.ErrorCode);
     }
 
     [Fact]
@@ -844,21 +854,31 @@ public class PixelConvertValidationTests
     }
 
     [Fact]
-    public void Zero_height_does_not_throw_managed_validation()
+    public void Zero_height_throws_invalid_argument()
     {
-        try
-        {
+        var ex = Assert.Throws<NozzleException>(() =>
             PixelConvert.WidenUInt16ToUInt32(Array.Empty<byte>(), Array.Empty<byte>(), width: 1, height: 0,
-                srcRowBytes: 2, dstRowBytes: 4, channels: 1);
-        }
-        catch (NozzleException)
-        {
-            // native library not available — managed validation passed
-        }
-        catch (DllNotFoundException)
-        {
-            // native library not loaded — managed validation passed
-        }
+                srcRowBytes: 2, dstRowBytes: 4, channels: 1));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
+    }
+
+    [Fact]
+    public void Zero_width_throws_invalid_argument()
+    {
+        var ex = Assert.Throws<NozzleException>(() =>
+            PixelConvert.WidenUInt16ToUInt32(Array.Empty<byte>(), Array.Empty<byte>(), width: 0, height: 1,
+                srcRowBytes: 2, dstRowBytes: 4, channels: 1));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
+    }
+
+    [Fact]
+    public void PermuteMap_value_exceeds_3_throws()
+    {
+        var ex = Assert.Throws<NozzleException>(() =>
+            PixelConvert.SwizzleChannels(s_big, s_big, width: 1, height: 1,
+                srcRowBytes: 4, dstRowBytes: 4,
+                format: TextureFormat.Rgba8Unorm, permuteMap: (0, 1, 2, 4)));
+        Assert.Equal(ErrorCode.ErrorInvalidArgument, ex.ErrorCode);
     }
 
     [Fact]
