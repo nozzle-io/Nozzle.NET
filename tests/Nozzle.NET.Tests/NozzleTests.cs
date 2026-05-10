@@ -765,3 +765,22 @@ public class NativeSenderDescLayoutTests
         Assert.Equal(28, (int)Marshal.OffsetOf<NativeMethods.SenderDesc>("FallbackFlagsValid"));
     }
 }
+
+public class SenderResolveFallbackFlagsApiTests
+{
+    [Fact]
+    public void String_overload_exists()
+    {
+        var method = typeof(Sender).GetMethod("ResolveFallbackFlags", new[] { typeof(string), typeof(string), typeof(uint), typeof(bool) });
+        Assert.NotNull(method);
+        Assert.Equal(typeof(FallbackFlags), method.ReturnType);
+    }
+
+    [Fact]
+    public void FallbackFlags_overload_exists()
+    {
+        var method = typeof(Sender).GetMethod("ResolveFallbackFlags", new[] { typeof(FallbackFlags) });
+        Assert.NotNull(method);
+        Assert.Equal(typeof(FallbackFlags), method.ReturnType);
+    }
+}
