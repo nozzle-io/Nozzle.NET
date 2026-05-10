@@ -221,6 +221,27 @@ public class FrameLifetimeTests
     }
 
     [Fact]
+    public void S5_Stale_handle_does_not_clear_active_mapping()
+    {
+        var api = new FakeFrameApi();
+        var frame = CreateTestFrame(api);
+
+        var active = frame.LockPixels();
+        var stale = new MappedPixelHandle(
+            frame,
+            new MappedPixels(),
+            MappedPixelAccess.ReadOnly);
+
+        frame.OnHandleDisposed(stale);
+
+        Assert.Throws<InvalidOperationException>(() => frame.ThrowIfMapped());
+        Assert.Equal(0, api.UnlockPixelsCount);
+
+        active.Dispose();
+        Assert.Equal(1, api.UnlockPixelsCount);
+    }
+
+    [Fact]
     public void D1_Dispose_then_GetInfo_throws_ObjectDisposedException()
     {
         var api = new FakeFrameApi();

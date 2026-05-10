@@ -86,15 +86,18 @@ public sealed class Frame : IDisposable
 
     internal void OnHandleDisposed(MappedPixelHandle handle)
     {
-        if (_activeMapping == null)
+        if (_activeMapping != handle)
+            return;
+
+        var access = _activeMappingAccess;
+        if (access == null)
             return;
 
         _activeMapping = null;
-        var access = _activeMappingAccess;
         _activeMappingAccess = null;
 
         var nativeHandle = DangerousGetHandle();
-        if (access == MappedPixelAccess.ReadOnly)
+        if (access.Value == MappedPixelAccess.ReadOnly)
             _api.UnlockPixels(nativeHandle);
         else
             _api.UnlockWritablePixels(nativeHandle);
