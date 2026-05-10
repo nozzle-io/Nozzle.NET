@@ -12,6 +12,33 @@ public sealed class Sender : IDisposable
         _handle = handle;
     }
 
+    internal static NativeMethods.SenderDesc BuildSenderDesc(
+        IntPtr pName, IntPtr pApp,
+        uint ringBufferSize, bool allowFormatFallback, FallbackFlags? fallbackFlags)
+    {
+        unsafe
+        {
+            var desc = new NativeMethods.SenderDesc
+            {
+                Name = (byte*)pName,
+                ApplicationName = (byte*)pApp,
+                RingBufferSize = ringBufferSize,
+            };
+
+            if (fallbackFlags.HasValue)
+            {
+                desc.FallbackFlags = (uint)fallbackFlags.Value;
+                desc.FallbackFlagsValid = 1;
+            }
+            else
+            {
+                desc.AllowFormatFallback = allowFormatFallback ? 1 : 0;
+            }
+
+            return desc;
+        }
+    }
+
     public static Sender Create(string name, string applicationName, uint ringBufferSize = 3, bool allowFormatFallback = false, FallbackFlags? fallbackFlags = null)
     {
         unsafe
@@ -22,22 +49,7 @@ public sealed class Sender : IDisposable
             fixed (byte* pName = nameBytes)
             fixed (byte* pApp = appBytes)
             {
-                var desc = new NativeMethods.SenderDesc
-                {
-                    Name = pName,
-                    ApplicationName = pApp,
-                    RingBufferSize = ringBufferSize,
-                };
-
-                if (fallbackFlags.HasValue)
-                {
-                    desc.FallbackFlags = (uint)fallbackFlags.Value;
-                    desc.FallbackFlagsValid = 1;
-                }
-                else
-                {
-                    desc.AllowFormatFallback = allowFormatFallback ? 1 : 0;
-                }
+                var desc = BuildSenderDesc((IntPtr)pName, (IntPtr)pApp, ringBufferSize, allowFormatFallback, fallbackFlags);
 
                 NativeMethods.NozzleSender* sender;
                 ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_sender_create(&desc, &sender));

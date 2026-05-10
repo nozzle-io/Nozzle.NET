@@ -746,6 +746,131 @@ public class PixelConvertApiTests
     }
 }
 
+public class PixelConvertValidationTests
+{
+    [Fact]
+    public void WidenUInt16_source_too_small()
+    {
+        var src = new ReadOnlySpan<byte>(new byte[1]);
+        var dst = new Span<byte>(new byte[100]);
+        Assert.Throws<ArgumentException>(() =>
+            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 1, height: 1,
+                srcRowBytes: 2, dstRowBytes: 4, channels: 1));
+    }
+
+    [Fact]
+    public void WidenUInt16_destination_too_small()
+    {
+        var src = new ReadOnlySpan<byte>(new byte[100]);
+        var dst = new Span<byte>(new byte[1]);
+        Assert.Throws<ArgumentException>(() =>
+            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 1, height: 1,
+                srcRowBytes: 2, dstRowBytes: 4, channels: 1));
+    }
+
+    [Fact]
+    public void WidenUInt16_src_row_bytes_too_small()
+    {
+        var src = new ReadOnlySpan<byte>(new byte[100]);
+        var dst = new Span<byte>(new byte[100]);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 4, height: 1,
+                srcRowBytes: 4, dstRowBytes: 16, channels: 1));
+    }
+
+    [Fact]
+    public void WidenUInt16_dst_row_bytes_too_small()
+    {
+        var src = new ReadOnlySpan<byte>(new byte[100]);
+        var dst = new Span<byte>(new byte[100]);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 4, height: 1,
+                srcRowBytes: 8, dstRowBytes: 8, channels: 1));
+    }
+
+    [Fact]
+    public void WidenUInt16_invalid_channels_zero()
+    {
+        var src = new ReadOnlySpan<byte>(new byte[100]);
+        var dst = new Span<byte>(new byte[100]);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 1, height: 1,
+                srcRowBytes: 2, dstRowBytes: 4, channels: 0));
+    }
+
+    [Fact]
+    public void WidenUInt16_invalid_channels_five()
+    {
+        var src = new ReadOnlySpan<byte>(new byte[100]);
+        var dst = new Span<byte>(new byte[100]);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 1, height: 1,
+                srcRowBytes: 2, dstRowBytes: 4, channels: 5));
+    }
+
+    [Fact]
+    public void SwizzleChannels_unknown_format_throws()
+    {
+        var src = new ReadOnlySpan<byte>(new byte[100]);
+        var dst = new Span<byte>(new byte[100]);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            PixelConvert.SwizzleChannels(src, dst, width: 1, height: 1,
+                srcRowBytes: 1, dstRowBytes: 1,
+                format: TextureFormat.Unknown, permuteMap: (0, 1, 2, 3)));
+    }
+
+    [Fact]
+    public void SwizzleChannels_source_too_small()
+    {
+        var src = new ReadOnlySpan<byte>(new byte[1]);
+        var dst = new Span<byte>(new byte[100]);
+        Assert.Throws<ArgumentException>(() =>
+            PixelConvert.SwizzleChannels(src, dst, width: 1, height: 1,
+                srcRowBytes: 4, dstRowBytes: 4,
+                format: TextureFormat.Rgba8Unorm, permuteMap: (0, 1, 2, 3)));
+    }
+
+    [Fact]
+    public void WidenHalfToFloat_source_too_small()
+    {
+        var src = new ReadOnlySpan<byte>(new byte[1]);
+        var dst = new Span<byte>(new byte[100]);
+        Assert.Throws<ArgumentException>(() =>
+            PixelConvert.WidenHalfToFloat(src, dst, width: 1, height: 1,
+                srcRowBytes: 2, dstRowBytes: 4, channels: 1));
+    }
+
+    [Fact]
+    public void ConvertUInt32ToFloat32_source_too_small()
+    {
+        var src = new ReadOnlySpan<byte>(new byte[1]);
+        var dst = new Span<byte>(new byte[100]);
+        Assert.Throws<ArgumentException>(() =>
+            PixelConvert.ConvertUInt32ToFloat32(src, dst, width: 1, height: 1,
+                srcRowBytes: 4, dstRowBytes: 4, channels: 1));
+    }
+
+    [Fact]
+    public void Zero_height_does_not_throw_managed_validation()
+    {
+        var src = new ReadOnlySpan<byte>(Array.Empty<byte>());
+        var dst = new Span<byte>(Array.Empty<byte>());
+        try
+        {
+            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 1, height: 0,
+                srcRowBytes: 2, dstRowBytes: 4, channels: 1);
+        }
+        catch (NozzleException)
+        {
+            // native library not available — managed validation passed
+        }
+        catch (DllNotFoundException)
+        {
+            // native library not loaded — managed validation passed
+        }
+    }
+}
+
 public class NativeSenderDescLayoutTests
 {
     [Fact]
@@ -827,5 +952,73 @@ public class SenderCreateFallbackFlagsTests
         Assert.True(parameters[2].HasDefaultValue);
         Assert.True(parameters[3].HasDefaultValue);
         Assert.True(parameters[4].HasDefaultValue);
+    }
+}
+
+public class SenderDescMappingTests
+{
+    private static NativeMethods.SenderDesc BuildDesc(
+        uint ringBufferSize = 3, bool allowFormatFallback = false,
+        FallbackFlags? fallbackFlags = null)
+    {
+        unsafe
+        {
+            byte name = 0;
+            byte app = 0;
+            return Sender.BuildSenderDesc((IntPtr)&name, (IntPtr)&app,
+                ringBufferSize, allowFormatFallback, fallbackFlags);
+        }
+    }
+
+    [Fact]
+    public void Unspecified_fallback_sets_allow_format_fallback_false()
+    {
+        var desc = BuildDesc(allowFormatFallback: false, fallbackFlags: null);
+        Assert.Equal(0u, desc.AllowFormatFallback);
+        Assert.Equal(0u, desc.FallbackFlags);
+        Assert.Equal(0u, desc.FallbackFlagsValid);
+    }
+
+    [Fact]
+    public void Unspecified_fallback_with_allow_true()
+    {
+        var desc = BuildDesc(allowFormatFallback: true, fallbackFlags: null);
+        Assert.Equal(1u, desc.AllowFormatFallback);
+        Assert.Equal(0u, desc.FallbackFlags);
+        Assert.Equal(0u, desc.FallbackFlagsValid);
+    }
+
+    [Fact]
+    public void Explicit_none_sets_valid_flag()
+    {
+        var desc = BuildDesc(fallbackFlags: FallbackFlags.None);
+        Assert.Equal(0u, (uint)FallbackFlags.None);
+        Assert.Equal(0u, desc.FallbackFlags);
+        Assert.Equal(1u, desc.FallbackFlagsValid);
+        Assert.Equal(0u, desc.AllowFormatFallback);
+    }
+
+    [Fact]
+    public void Explicit_safe_defaults_sets_flags_and_valid()
+    {
+        var desc = BuildDesc(fallbackFlags: FallbackFlags.SafeDefaults);
+        Assert.Equal((uint)FallbackFlags.SafeDefaults, desc.FallbackFlags);
+        Assert.Equal(1u, desc.FallbackFlagsValid);
+    }
+
+    [Fact]
+    public void Explicit_flags_overrides_allow_format_fallback()
+    {
+        var desc = BuildDesc(allowFormatFallback: true, fallbackFlags: FallbackFlags.StorageCompatible);
+        Assert.Equal((uint)FallbackFlags.StorageCompatible, desc.FallbackFlags);
+        Assert.Equal(1u, desc.FallbackFlagsValid);
+        Assert.Equal(0u, desc.AllowFormatFallback);
+    }
+
+    [Fact]
+    public void Ring_buffer_size_preserved()
+    {
+        var desc = BuildDesc(ringBufferSize: 5);
+        Assert.Equal(5u, desc.RingBufferSize);
     }
 }
