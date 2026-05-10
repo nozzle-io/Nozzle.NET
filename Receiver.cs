@@ -52,7 +52,7 @@ public sealed class Receiver : IDisposable
             }
 
             ErrorHelper.ThrowIfFailed(result);
-            return new Frame(frame, ownsHandle: true);
+            return new Frame(frame);
         }
     }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Nozzle;
@@ -6,100 +7,162 @@ namespace Nozzle;
 public sealed class Frame : IDisposable
 {
     private unsafe NativeMethods.NozzleFrame* _handle;
-    private readonly bool _ownsHandle;
+    private readonly IFrameNativeApi _api;
+    private MappedPixelHandle? _activeMapping;
+    private MappedPixelAccess? _activeMappingAccess;
 
-    internal unsafe Frame(NativeMethods.NozzleFrame* handle, bool ownsHandle)
+    /// <summary>
+    /// Production constructor. Handle must be a valid NozzleFrame* returned by the C API.
+    /// Finalizer is enabled as a safety net for undisposed frames.
+    /// </summary>
+    internal unsafe Frame(NativeMethods.NozzleFrame* handle)
+        : this(handle, NativeFrameApi.Instance, suppressFinalizer: false)
     {
-        _handle = handle;
-        _ownsHandle = ownsHandle;
     }
 
-    internal unsafe NativeMethods.NozzleFrame* Handle => _handle;
+    private unsafe Frame(
+        NativeMethods.NozzleFrame* handle,
+        IFrameNativeApi api,
+        bool suppressFinalizer)
+    {
+        _handle = handle;
+        _api = api;
+
+        if (suppressFinalizer)
+        {
+            // Test/fake handles must never reach the production finalizer path.
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    internal static unsafe Frame CreateForTests(
+        NativeMethods.NozzleFrame* handle,
+        IFrameNativeApi api)
+    {
+        return new Frame(handle, api, suppressFinalizer: true);
+    }
+
+    internal unsafe IntPtr DangerousGetHandle()
+    {
+        if (_handle == null)
+            throw new ObjectDisposedException(nameof(Frame));
+        return (IntPtr)_handle;
+    }
+
+    internal void ThrowIfMapped()
+    {
+        if (_activeMapping != null)
+            throw new InvalidOperationException(
+                "Cannot commit frame while pixels are mapped. Dispose the MappedPixelHandle first.");
+    }
 
     public FrameInfo GetInfo()
     {
-        unsafe
-        {
-            var info = new NativeMethods.FrameInfo();
-            ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_frame_get_info(_handle, &info));
-            return FrameInfo.FromNative(info);
-        }
+        _api.GetInfo(DangerousGetHandle(), out NativeMethods.FrameInfo info);
+        return FrameInfo.FromNative(info);
     }
 
-    public MappedPixels LockPixels(TextureOrigin origin = TextureOrigin.TopLeft)
+    public MappedPixelHandle LockPixels(TextureOrigin origin = TextureOrigin.TopLeft)
     {
-        unsafe
-        {
-            var pixels = new NativeMethods.MappedPixels();
-            ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_frame_lock_pixels_with_origin(
-                _handle, (NativeMethods.TextureOrigin)origin, &pixels));
-            return MappedPixels.FromNative(pixels);
-        }
+        var handle = DangerousGetHandle();
+        ThrowIfAlreadyMapped();
+        _api.LockPixels(handle, (NativeMethods.TextureOrigin)origin, out NativeMethods.MappedPixels pixels);
+        var mapping = new MappedPixelHandle(this, MappedPixels.FromNative(pixels), MappedPixelAccess.ReadOnly);
+        _activeMapping = mapping;
+        _activeMappingAccess = MappedPixelAccess.ReadOnly;
+        return mapping;
     }
 
-    public void UnlockPixels()
+    public MappedPixelHandle LockWritablePixels(TextureOrigin origin = TextureOrigin.TopLeft)
     {
-        unsafe
-        {
-            NativeMethods.nozzle_frame_unlock_pixels(_handle);
-        }
+        var handle = DangerousGetHandle();
+        ThrowIfAlreadyMapped();
+        _api.LockWritablePixels(handle, (NativeMethods.TextureOrigin)origin, out NativeMethods.MappedPixels pixels);
+        var mapping = new MappedPixelHandle(this, MappedPixels.FromNative(pixels), MappedPixelAccess.Writable);
+        _activeMapping = mapping;
+        _activeMappingAccess = MappedPixelAccess.Writable;
+        return mapping;
     }
 
-    public MappedPixels LockWritablePixels(TextureOrigin origin = TextureOrigin.TopLeft)
+    internal void OnHandleDisposed(MappedPixelHandle handle)
     {
-        unsafe
-        {
-            var pixels = new NativeMethods.MappedPixels();
-            ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_frame_lock_writable_pixels_with_origin(
-                _handle, (NativeMethods.TextureOrigin)origin, &pixels));
-            return MappedPixels.FromNative(pixels);
-        }
-    }
+        if (_activeMapping == null)
+            return;
 
-    public void UnlockWritablePixels()
-    {
-        unsafe
-        {
-            NativeMethods.nozzle_frame_unlock_writable_pixels(_handle);
-        }
+        _activeMapping = null;
+        var access = _activeMappingAccess;
+        _activeMappingAccess = null;
+
+        var nativeHandle = DangerousGetHandle();
+        if (access == MappedPixelAccess.ReadOnly)
+            _api.UnlockPixels(nativeHandle);
+        else
+            _api.UnlockWritablePixels(nativeHandle);
     }
 
     public void CopyToGlTexture(uint glTextureName, uint glTarget, uint width, uint height, TextureFormat format)
     {
-        unsafe
-        {
-            ErrorHelper.ThrowIfFailed(
-                NativeMethods.nozzle_frame_copy_to_gl_texture(_handle, glTextureName, glTarget,
-                    width, height, (NativeMethods.TextureFormat)format));
-        }
+        _api.CopyToGlTexture(DangerousGetHandle(), glTextureName, glTarget,
+            width, height, (NativeMethods.TextureFormat)format);
     }
 
     public ResolvedTextureFormat GetResolvedFormat()
     {
-        unsafe
-        {
-            var resolved = new NativeMethods.ResolvedTextureFormat();
-            ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_frame_get_resolved_format(_handle, &resolved));
-            return ResolvedTextureFormat.FromNative(resolved);
-        }
+        _api.GetResolvedFormat(DangerousGetHandle(), out NativeMethods.ResolvedTextureFormat resolved);
+        return ResolvedTextureFormat.FromNative(resolved);
     }
 
     public void CopyToNativeTexture(IntPtr nativeTexture, uint width, uint height, TextureFormat format)
     {
-        unsafe
-        {
-            ErrorHelper.ThrowIfFailed(
-                NativeMethods.nozzle_frame_copy_to_native_texture(_handle, (void*)nativeTexture,
-                    width, height, (NativeMethods.TextureFormat)format));
-        }
+        _api.CopyToNativeTexture(DangerousGetHandle(), nativeTexture,
+            width, height, (NativeMethods.TextureFormat)format);
     }
 
     private unsafe void Dispose(bool disposing)
     {
-        if (_handle != null && _ownsHandle)
+        var handle = _handle;
+        if (handle == null) return;
+        _handle = null;
+
+        if (disposing)
         {
-            NativeMethods.nozzle_frame_release(_handle);
-            _handle = null;
+            var activeMapping = _activeMapping;
+            var activeAccess = _activeMappingAccess;
+            _activeMapping = null;
+            _activeMappingAccess = null;
+
+            try
+            {
+                if (activeMapping != null)
+                {
+                    activeMapping.Invalidate();
+
+                    var nativeHandle = (IntPtr)handle;
+                    if (activeAccess!.Value == MappedPixelAccess.ReadOnly)
+                        _api.UnlockPixels(nativeHandle);
+                    else
+                        _api.UnlockWritablePixels(nativeHandle);
+                }
+            }
+            finally
+            {
+                // Native unlock/release are no-throw by contract;
+                // finally keeps fake/test failures from skipping release.
+                _api.Release((IntPtr)handle);
+            }
+        }
+        else
+        {
+            try
+            {
+                NativeMethods.nozzle_frame_release(handle);
+            }
+            catch
+            {
+                // Suppress managed P/Invoke setup exceptions only.
+                // Does NOT protect against native crashes (access violation etc).
+                // Production invariant: handle is always valid C API-returned pointer.
+            }
         }
     }
 
@@ -112,5 +175,12 @@ public sealed class Frame : IDisposable
     ~Frame()
     {
         Dispose(false);
+    }
+
+    private void ThrowIfAlreadyMapped()
+    {
+        if (_activeMapping != null)
+            throw new InvalidOperationException(
+                "Frame already has an active pixel mapping. Dispose the existing MappedPixelHandle first.");
     }
 }

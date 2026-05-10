@@ -86,25 +86,26 @@ public sealed class Sender : IDisposable
         }
     }
 
-    public Frame AcquireWritableFrame(uint width, uint height, TextureFormat format)
+    public unsafe Frame AcquireWritableFrame(uint width, uint height, TextureFormat format)
     {
-        unsafe
-        {
-            NativeMethods.NozzleFrame* frame;
-            ErrorHelper.ThrowIfFailed(
-                NativeMethods.nozzle_sender_acquire_writable_frame(_handle, width, height,
-                    (NativeMethods.TextureFormat)format, &frame));
-            return new Frame(frame, ownsHandle: false);
-        }
+        NativeMethods.NozzleFrame* frame;
+        ErrorHelper.ThrowIfFailed(
+            NativeMethods.nozzle_sender_acquire_writable_frame(_handle, width, height,
+                (NativeMethods.TextureFormat)format, &frame));
+        return new Frame(frame);
     }
 
-    public void CommitFrame(Frame frame)
+    public unsafe void CommitFrame(Frame frame)
     {
-        unsafe
-        {
-            ErrorHelper.ThrowIfFailed(
-                NativeMethods.nozzle_sender_commit_frame(_handle, frame.Handle));
-        }
+        frame.ThrowIfMapped();
+        var frameHandle = frame.DangerousGetHandle();
+
+        var senderHandle = _handle;
+        if (senderHandle == null)
+            throw new ObjectDisposedException(nameof(Sender));
+
+        ErrorHelper.ThrowIfFailed(
+            NativeMethods.nozzle_sender_commit_frame(senderHandle, (NativeMethods.NozzleFrame*)frameHandle));
     }
 
     public SenderInfo GetInfo()
