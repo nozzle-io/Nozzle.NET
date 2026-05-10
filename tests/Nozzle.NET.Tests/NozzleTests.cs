@@ -706,7 +706,7 @@ public class FallbackFlagsTests
     [Fact]
     public void Has_flags_enum_attribute()
     {
-        Assert.NotNull(typeof(FallbackFlags).GetCustomAttributes(typeof(FlagsAttribute), false));
+        Assert.True(typeof(FallbackFlags).IsDefined(typeof(FlagsAttribute), inherit: false));
     }
 
     [Fact]
@@ -728,12 +728,12 @@ public class PixelConvertApiTests
     }
 
     [Fact]
-    public void Pointer_parameters_use_nint()
+    public void Buffer_parameters_use_span()
     {
         var method = typeof(PixelConvert).GetMethod("WidenUInt16ToUInt32")!;
         var parameters = method.GetParameters();
-        Assert.Equal(typeof(nint), parameters[0].ParameterType);
-        Assert.Equal(typeof(nint), parameters[1].ParameterType);
+        Assert.Equal(typeof(ReadOnlySpan<byte>), parameters[0].ParameterType);
+        Assert.Equal(typeof(Span<byte>), parameters[1].ParameterType);
     }
 
     [Fact]
@@ -782,5 +782,50 @@ public class SenderResolveFallbackFlagsApiTests
         var method = typeof(Sender).GetMethod("ResolveFallbackFlags", new[] { typeof(FallbackFlags) });
         Assert.NotNull(method);
         Assert.Equal(typeof(FallbackFlags), method.ReturnType);
+    }
+}
+
+public class SenderCreateFallbackFlagsTests
+{
+    [Fact]
+    public void Create_accepts_nullable_fallback_flags()
+    {
+        var method = typeof(Sender).GetMethod("Create", new[]
+        {
+            typeof(string), typeof(string), typeof(uint), typeof(bool),
+            typeof(FallbackFlags?)
+        });
+        Assert.NotNull(method);
+    }
+
+    [Fact]
+    public void FallbackFlags_has_default_value_null()
+    {
+        var method = typeof(Sender).GetMethod("Create", new[]
+        {
+            typeof(string), typeof(string), typeof(uint), typeof(bool),
+            typeof(FallbackFlags?)
+        });
+        Assert.NotNull(method);
+        var parameters = method.GetParameters();
+        Assert.True(parameters[4].HasDefaultValue);
+        Assert.Null(parameters[4].DefaultValue);
+    }
+
+    [Fact]
+    public void All_parameters_except_name_have_defaults()
+    {
+        var method = typeof(Sender).GetMethod("Create", new[]
+        {
+            typeof(string), typeof(string), typeof(uint), typeof(bool),
+            typeof(FallbackFlags?)
+        });
+        Assert.NotNull(method);
+        var parameters = method.GetParameters();
+        Assert.False(parameters[0].HasDefaultValue);
+        Assert.False(parameters[1].HasDefaultValue);
+        Assert.True(parameters[2].HasDefaultValue);
+        Assert.True(parameters[3].HasDefaultValue);
+        Assert.True(parameters[4].HasDefaultValue);
     }
 }

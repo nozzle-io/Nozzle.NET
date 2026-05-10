@@ -12,7 +12,7 @@ public sealed class Sender : IDisposable
         _handle = handle;
     }
 
-    public static Sender Create(string name, string applicationName, uint ringBufferSize = 3, bool allowFormatFallback = false)
+    public static Sender Create(string name, string applicationName, uint ringBufferSize = 3, bool allowFormatFallback = false, FallbackFlags? fallbackFlags = null)
     {
         unsafe
         {
@@ -27,8 +27,17 @@ public sealed class Sender : IDisposable
                     Name = pName,
                     ApplicationName = pApp,
                     RingBufferSize = ringBufferSize,
-                    AllowFormatFallback = allowFormatFallback ? 1 : 0,
                 };
+
+                if (fallbackFlags.HasValue)
+                {
+                    desc.FallbackFlags = (uint)fallbackFlags.Value;
+                    desc.FallbackFlagsValid = 1;
+                }
+                else
+                {
+                    desc.AllowFormatFallback = allowFormatFallback ? 1 : 0;
+                }
 
                 NativeMethods.NozzleSender* sender;
                 ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_sender_create(&desc, &sender));
