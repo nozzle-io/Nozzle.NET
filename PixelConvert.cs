@@ -1,5 +1,3 @@
-using System;
-
 namespace Nozzle;
 
 public static class PixelConvert
