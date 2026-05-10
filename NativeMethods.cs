@@ -110,6 +110,23 @@ internal static unsafe partial class NativeMethods
         BottomLeft = 1,
     }
 
+    public enum FormatSource : int
+    {
+        Unknown = 0,
+        Requested = 1,
+        CallerHint = 2,
+        NativeObserved = 3,
+    }
+
+    public enum NativeFormatKind : int
+    {
+        Unknown = 0,
+        MtlPixelFormat = 1,
+        DxgiFormat = 2,
+        DrmFourcc = 3,
+        GlInternalFormat = 4,
+    }
+
     // ========== Descriptor Structs ==========
 
     [StructLayout(LayoutKind.Sequential)]
@@ -209,6 +226,22 @@ internal static unsafe partial class NativeMethods
         public uint Height;
         public TextureFormat Format;
         public BackendType Backend;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ResolvedTextureFormat
+    {
+        public TextureFormat StorageFormat;
+        public TextureFormat SemanticFormat;
+        public FormatSource FormatSource;
+        public BackendType NativeBackend;
+        public NativeFormatKind NativeKind;
+        public uint NativeValue;
+        public uint ChannelOrder;
+        public uint ComponentType;
+        public byte ComponentBits;
+        public byte ChannelCount;
+        public byte BytesPerPixel;
     }
 
     // ========== Sender API ==========
@@ -325,4 +358,39 @@ internal static unsafe partial class NativeMethods
     public static partial ErrorCode nozzle_frame_copy_to_gl_texture(
         NozzleFrame* frame, uint gl_texture_name, uint gl_target,
         uint width, uint height, TextureFormat format);
+
+    // ========== Resolved Format ==========
+
+    [LibraryImport(LibraryName)]
+    public static partial ErrorCode nozzle_frame_get_resolved_format(
+        NozzleFrame* frame, ResolvedTextureFormat* out_resolved);
+
+    // ========== Fallback Flags ==========
+
+    [LibraryImport(LibraryName)]
+    public static partial ErrorCode nozzle_resolve_fallback_flags(
+        SenderDesc* desc, uint* out_flags);
+
+    // ========== Pixel Conversion ==========
+
+    [LibraryImport(LibraryName)]
+    public static partial ErrorCode nozzle_swizzle_channels(
+        void* src, void* dst, uint width, uint height,
+        uint src_row_bytes, uint dst_row_bytes,
+        TextureFormat format, byte* permute_map);
+
+    [LibraryImport(LibraryName)]
+    public static partial ErrorCode nozzle_widen_uint16_to_uint32(
+        void* src, void* dst, uint width, uint height,
+        uint src_row_bytes, uint dst_row_bytes, uint channels);
+
+    [LibraryImport(LibraryName)]
+    public static partial ErrorCode nozzle_convert_uint32_to_float32(
+        void* src, void* dst, uint width, uint height,
+        uint src_row_bytes, uint dst_row_bytes, uint channels);
+
+    [LibraryImport(LibraryName)]
+    public static partial ErrorCode nozzle_widen_half_to_float(
+        void* src, void* dst, uint width, uint height,
+        uint src_row_bytes, uint dst_row_bytes, uint channels);
 }

@@ -96,6 +96,39 @@ public readonly struct ConnectedSenderInfo
     }
 }
 
+public readonly struct ResolvedTextureFormat
+{
+    public TextureFormat StorageFormat { get; init; }
+    public TextureFormat SemanticFormat { get; init; }
+    public FormatSource FormatSource { get; init; }
+    public BackendType NativeBackend { get; init; }
+    public NativeFormatKind NativeKind { get; init; }
+    public uint NativeValue { get; init; }
+    public uint ChannelOrder { get; init; }
+    public uint ComponentType { get; init; }
+    public byte ComponentBits { get; init; }
+    public byte ChannelCount { get; init; }
+    public byte BytesPerPixel { get; init; }
+
+    internal static ResolvedTextureFormat FromNative(NativeMethods.ResolvedTextureFormat native)
+    {
+        return new ResolvedTextureFormat
+        {
+            StorageFormat = (TextureFormat)native.StorageFormat,
+            SemanticFormat = (TextureFormat)native.SemanticFormat,
+            FormatSource = (FormatSource)native.FormatSource,
+            NativeBackend = (BackendType)native.NativeBackend,
+            NativeKind = (NativeFormatKind)native.NativeKind,
+            NativeValue = native.NativeValue,
+            ChannelOrder = native.ChannelOrder,
+            ComponentType = native.ComponentType,
+            ComponentBits = native.ComponentBits,
+            ChannelCount = native.ChannelCount,
+            BytesPerPixel = native.BytesPerPixel,
+        };
+    }
+}
+
 public readonly struct MappedPixels
 {
     public nint Data { get; init; }

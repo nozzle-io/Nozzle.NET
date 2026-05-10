@@ -588,3 +588,85 @@ public class NativeMappedPixelsLayoutTests
         }
     }
 }
+
+public class FormatSourceTests
+{
+    [Fact]
+    public void Values_match_c_abi()
+    {
+        Assert.Equal(0, (int)FormatSource.Unknown);
+        Assert.Equal(1, (int)FormatSource.Requested);
+        Assert.Equal(2, (int)FormatSource.CallerHint);
+        Assert.Equal(3, (int)FormatSource.NativeObserved);
+    }
+}
+
+public class NativeFormatKindTests
+{
+    [Fact]
+    public void Values_match_c_abi()
+    {
+        Assert.Equal(0, (int)NativeFormatKind.Unknown);
+        Assert.Equal(1, (int)NativeFormatKind.MtlPixelFormat);
+        Assert.Equal(2, (int)NativeFormatKind.DxgiFormat);
+        Assert.Equal(3, (int)NativeFormatKind.DrmFourcc);
+        Assert.Equal(4, (int)NativeFormatKind.GlInternalFormat);
+    }
+}
+
+public class NativeResolvedTextureFormatLayoutTests
+{
+    [Fact]
+    public void Size_matches_c_abi()
+    {
+        Assert.Equal(36, Marshal.SizeOf<NativeMethods.ResolvedTextureFormat>());
+    }
+
+    [Fact]
+    public void Field_offsets_match_c_abi()
+    {
+        Assert.Equal(0, (int)Marshal.OffsetOf<NativeMethods.ResolvedTextureFormat>("StorageFormat"));
+        Assert.Equal(4, (int)Marshal.OffsetOf<NativeMethods.ResolvedTextureFormat>("SemanticFormat"));
+        Assert.Equal(8, (int)Marshal.OffsetOf<NativeMethods.ResolvedTextureFormat>("FormatSource"));
+        Assert.Equal(12, (int)Marshal.OffsetOf<NativeMethods.ResolvedTextureFormat>("NativeBackend"));
+        Assert.Equal(16, (int)Marshal.OffsetOf<NativeMethods.ResolvedTextureFormat>("NativeKind"));
+        Assert.Equal(20, (int)Marshal.OffsetOf<NativeMethods.ResolvedTextureFormat>("NativeValue"));
+        Assert.Equal(24, (int)Marshal.OffsetOf<NativeMethods.ResolvedTextureFormat>("ChannelOrder"));
+        Assert.Equal(28, (int)Marshal.OffsetOf<NativeMethods.ResolvedTextureFormat>("ComponentType"));
+        Assert.Equal(32, (int)Marshal.OffsetOf<NativeMethods.ResolvedTextureFormat>("ComponentBits"));
+        Assert.Equal(33, (int)Marshal.OffsetOf<NativeMethods.ResolvedTextureFormat>("ChannelCount"));
+        Assert.Equal(34, (int)Marshal.OffsetOf<NativeMethods.ResolvedTextureFormat>("BytesPerPixel"));
+    }
+
+    [Fact]
+    public void FromNative_maps_all_fields()
+    {
+        var native = new NativeMethods.ResolvedTextureFormat
+        {
+            StorageFormat = NativeMethods.TextureFormat.Rgba8Unorm,
+            SemanticFormat = NativeMethods.TextureFormat.Rgba8Srgb,
+            FormatSource = NativeMethods.FormatSource.NativeObserved,
+            NativeBackend = NativeMethods.BackendType.Metal,
+            NativeKind = NativeMethods.NativeFormatKind.MtlPixelFormat,
+            NativeValue = 80,
+            ChannelOrder = 1,
+            ComponentType = 2,
+            ComponentBits = 8,
+            ChannelCount = 4,
+            BytesPerPixel = 4,
+        };
+        var managed = ResolvedTextureFormat.FromNative(native);
+
+        Assert.Equal(TextureFormat.Rgba8Unorm, managed.StorageFormat);
+        Assert.Equal(TextureFormat.Rgba8Srgb, managed.SemanticFormat);
+        Assert.Equal(FormatSource.NativeObserved, managed.FormatSource);
+        Assert.Equal(BackendType.Metal, managed.NativeBackend);
+        Assert.Equal(NativeFormatKind.MtlPixelFormat, managed.NativeKind);
+        Assert.Equal(80u, managed.NativeValue);
+        Assert.Equal(1u, managed.ChannelOrder);
+        Assert.Equal(2u, managed.ComponentType);
+        Assert.Equal(8, managed.ComponentBits);
+        Assert.Equal(4, managed.ChannelCount);
+        Assert.Equal(4, managed.BytesPerPixel);
+    }
+}

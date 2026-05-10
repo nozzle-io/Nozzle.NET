@@ -88,3 +88,20 @@ public enum TextureOrigin
     TopLeft = 0,
     BottomLeft = 1,
 }
+
+public enum FormatSource
+{
+    Unknown = 0,
+    Requested = 1,
+    CallerHint = 2,
+    NativeObserved = 3,
+}
+
+public enum NativeFormatKind
+{
+    Unknown = 0,
+    MtlPixelFormat = 1,
+    DxgiFormat = 2,
+    DrmFourcc = 3,
+    GlInternalFormat = 4,
+}
