@@ -725,3 +725,23 @@ public class PixelConvertApiTests
         Assert.Equal(typeof(nint), parameters[7].ParameterType);
     }
 }
+
+public class NativeSenderDescLayoutTests
+{
+    [Fact]
+    public void Size_matches_c_abi()
+    {
+        Assert.Equal(32, Marshal.SizeOf<NativeMethods.SenderDesc>());
+    }
+
+    [Fact]
+    public void Field_offsets_match_c_abi()
+    {
+        Assert.Equal(0, (int)Marshal.OffsetOf<NativeMethods.SenderDesc>("Name"));
+        Assert.Equal(8, (int)Marshal.OffsetOf<NativeMethods.SenderDesc>("ApplicationName"));
+        Assert.Equal(16, (int)Marshal.OffsetOf<NativeMethods.SenderDesc>("RingBufferSize"));
+        Assert.Equal(20, (int)Marshal.OffsetOf<NativeMethods.SenderDesc>("AllowFormatFallback"));
+        Assert.Equal(24, (int)Marshal.OffsetOf<NativeMethods.SenderDesc>("FallbackFlags"));
+        Assert.Equal(28, (int)Marshal.OffsetOf<NativeMethods.SenderDesc>("FallbackFlagsValid"));
+    }
+}
