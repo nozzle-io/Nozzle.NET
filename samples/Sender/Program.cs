@@ -78,7 +78,7 @@ unsafe void FillGradient(MappedPixels pixels, uint frameIndex)
     }
 }
 
-static void WriteFloat(byte* buffer, int offset, float value)
+static unsafe void WriteFloat(byte* buffer, int offset, float value)
 {
     var bytes = BitConverter.GetBytes(value);
     buffer[offset] = bytes[0];
