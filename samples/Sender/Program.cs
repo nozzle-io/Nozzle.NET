@@ -23,7 +23,6 @@ var frameIndex = 0u;
 var interval = TimeSpan.FromSeconds(1.0 / Fps);
 var nextTime = DateTime.UtcNow;
 const int BytesPerPixel = sizeof(float) * 4;
-var pixelBuffer = new byte[Width * Height * BytesPerPixel];
 
 try
 {
@@ -37,11 +36,9 @@ try
         }
         nextTime = now + interval;
 
-        FillGradient(pixelBuffer, Width, Height, frameIndex);
-
         using var frame = sender.AcquireWritableFrame(Width, Height, TextureFormat.Rgba32Float);
         var pixels = frame.LockWritablePixels();
-        Marshal.Copy(pixelBuffer, 0, pixels.Data, pixelBuffer.Length);
+        FillGradient(pixels, frameIndex);
         frame.UnlockWritablePixels();
         sender.CommitFrame(frame);
 
@@ -58,30 +55,31 @@ finally
     Console.WriteLine("Sender shut down.");
 }
 
-void FillGradient(byte[] buffer, uint width, uint height, uint frameIndex)
+unsafe void FillGradient(MappedPixels pixels, uint frameIndex)
 {
     float t = frameIndex / (Fps * 10.0f);
-    int stride = (int)width * 16;
+    int stride = (int)pixels.RowStrideBytes;
+    byte* ptr = (byte*)pixels.Data;
 
-    for (uint y = 0; y < height; y++)
+    for (uint y = 0; y < pixels.Height; y++)
     {
-        for (uint x = 0; x < width; x++)
+        for (uint x = 0; x < pixels.Width; x++)
         {
-            float r = (float)Math.Sin(x / width * Math.PI * 2.0 + t) * 0.5f + 0.5f;
-            float g = (float)Math.Sin(y / height * Math.PI * 2.0 + t * 0.7f) * 0.5f + 0.5f;
-            float b = (float)Math.Sin((x + y) / (width + height) * Math.PI * 2.0 + t * 1.3f) * 0.5f + 0.5f;
+            float r = (float)Math.Sin(x / (double)pixels.Width * Math.PI * 2.0 + t) * 0.5f + 0.5f;
+            float g = (float)Math.Sin(y / (double)pixels.Height * Math.PI * 2.0 + t * 0.7f) * 0.5f + 0.5f;
+            float b = (float)Math.Sin((x + y) / (double)(pixels.Width + pixels.Height) * Math.PI * 2.0 + t * 1.3f) * 0.5f + 0.5f;
             float a = 1.0f;
 
             int offset = (int)(y * stride + x * 16);
-            WriteFloat(buffer, offset, r);
-            WriteFloat(buffer, offset + 4, g);
-            WriteFloat(buffer, offset + 8, b);
-            WriteFloat(buffer, offset + 12, a);
+            WriteFloat(ptr, offset, r);
+            WriteFloat(ptr, offset + 4, g);
+            WriteFloat(ptr, offset + 8, b);
+            WriteFloat(ptr, offset + 12, a);
         }
     }
 }
 
-void WriteFloat(byte[] buffer, int offset, float value)
+static void WriteFloat(byte* buffer, int offset, float value)
 {
     var bytes = BitConverter.GetBytes(value);
     buffer[offset] = bytes[0];
