@@ -748,73 +748,62 @@ public class PixelConvertApiTests
 
 public class PixelConvertValidationTests
 {
+    private static readonly byte[] s_small = new byte[1];
+    private static readonly byte[] s_big = new byte[100];
+
     [Fact]
     public void WidenUInt16_source_too_small()
     {
-        var src = new ReadOnlySpan<byte>(new byte[1]);
-        var dst = new Span<byte>(new byte[100]);
         Assert.Throws<ArgumentException>(() =>
-            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 1, height: 1,
+            PixelConvert.WidenUInt16ToUInt32(s_small, s_big, width: 1, height: 1,
                 srcRowBytes: 2, dstRowBytes: 4, channels: 1));
     }
 
     [Fact]
     public void WidenUInt16_destination_too_small()
     {
-        var src = new ReadOnlySpan<byte>(new byte[100]);
-        var dst = new Span<byte>(new byte[1]);
         Assert.Throws<ArgumentException>(() =>
-            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 1, height: 1,
+            PixelConvert.WidenUInt16ToUInt32(s_big, s_small, width: 1, height: 1,
                 srcRowBytes: 2, dstRowBytes: 4, channels: 1));
     }
 
     [Fact]
     public void WidenUInt16_src_row_bytes_too_small()
     {
-        var src = new ReadOnlySpan<byte>(new byte[100]);
-        var dst = new Span<byte>(new byte[100]);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 4, height: 1,
+            PixelConvert.WidenUInt16ToUInt32(s_big, s_big, width: 4, height: 1,
                 srcRowBytes: 4, dstRowBytes: 16, channels: 1));
     }
 
     [Fact]
     public void WidenUInt16_dst_row_bytes_too_small()
     {
-        var src = new ReadOnlySpan<byte>(new byte[100]);
-        var dst = new Span<byte>(new byte[100]);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 4, height: 1,
+            PixelConvert.WidenUInt16ToUInt32(s_big, s_big, width: 4, height: 1,
                 srcRowBytes: 8, dstRowBytes: 8, channels: 1));
     }
 
     [Fact]
     public void WidenUInt16_invalid_channels_zero()
     {
-        var src = new ReadOnlySpan<byte>(new byte[100]);
-        var dst = new Span<byte>(new byte[100]);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 1, height: 1,
+            PixelConvert.WidenUInt16ToUInt32(s_big, s_big, width: 1, height: 1,
                 srcRowBytes: 2, dstRowBytes: 4, channels: 0));
     }
 
     [Fact]
     public void WidenUInt16_invalid_channels_five()
     {
-        var src = new ReadOnlySpan<byte>(new byte[100]);
-        var dst = new Span<byte>(new byte[100]);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 1, height: 1,
+            PixelConvert.WidenUInt16ToUInt32(s_big, s_big, width: 1, height: 1,
                 srcRowBytes: 2, dstRowBytes: 4, channels: 5));
     }
 
     [Fact]
     public void SwizzleChannels_unknown_format_throws()
     {
-        var src = new ReadOnlySpan<byte>(new byte[100]);
-        var dst = new Span<byte>(new byte[100]);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            PixelConvert.SwizzleChannels(src, dst, width: 1, height: 1,
+            PixelConvert.SwizzleChannels(s_big, s_big, width: 1, height: 1,
                 srcRowBytes: 1, dstRowBytes: 1,
                 format: TextureFormat.Unknown, permuteMap: (0, 1, 2, 3)));
     }
@@ -822,10 +811,8 @@ public class PixelConvertValidationTests
     [Fact]
     public void SwizzleChannels_source_too_small()
     {
-        var src = new ReadOnlySpan<byte>(new byte[1]);
-        var dst = new Span<byte>(new byte[100]);
         Assert.Throws<ArgumentException>(() =>
-            PixelConvert.SwizzleChannels(src, dst, width: 1, height: 1,
+            PixelConvert.SwizzleChannels(s_small, s_big, width: 1, height: 1,
                 srcRowBytes: 4, dstRowBytes: 4,
                 format: TextureFormat.Rgba8Unorm, permuteMap: (0, 1, 2, 3)));
     }
@@ -833,31 +820,25 @@ public class PixelConvertValidationTests
     [Fact]
     public void WidenHalfToFloat_source_too_small()
     {
-        var src = new ReadOnlySpan<byte>(new byte[1]);
-        var dst = new Span<byte>(new byte[100]);
         Assert.Throws<ArgumentException>(() =>
-            PixelConvert.WidenHalfToFloat(src, dst, width: 1, height: 1,
+            PixelConvert.WidenHalfToFloat(s_small, s_big, width: 1, height: 1,
                 srcRowBytes: 2, dstRowBytes: 4, channels: 1));
     }
 
     [Fact]
     public void ConvertUInt32ToFloat32_source_too_small()
     {
-        var src = new ReadOnlySpan<byte>(new byte[1]);
-        var dst = new Span<byte>(new byte[100]);
         Assert.Throws<ArgumentException>(() =>
-            PixelConvert.ConvertUInt32ToFloat32(src, dst, width: 1, height: 1,
+            PixelConvert.ConvertUInt32ToFloat32(s_small, s_big, width: 1, height: 1,
                 srcRowBytes: 4, dstRowBytes: 4, channels: 1));
     }
 
     [Fact]
     public void Zero_height_does_not_throw_managed_validation()
     {
-        var src = new ReadOnlySpan<byte>(Array.Empty<byte>());
-        var dst = new Span<byte>(Array.Empty<byte>());
         try
         {
-            PixelConvert.WidenUInt16ToUInt32(src, dst, width: 1, height: 0,
+            PixelConvert.WidenUInt16ToUInt32(Array.Empty<byte>(), Array.Empty<byte>(), width: 1, height: 0,
                 srcRowBytes: 2, dstRowBytes: 4, channels: 1);
         }
         catch (NozzleException)
