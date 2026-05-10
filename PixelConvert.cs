@@ -6,15 +6,10 @@ public static class PixelConvert
 {
     private static int SwizzleBytesPerPixel(TextureFormat format) => format switch
     {
-        TextureFormat.Rgb8Unorm => 3,
         TextureFormat.Rgba8Unorm => 4,
         TextureFormat.Bgra8Unorm => 4,
         TextureFormat.Rgba8Srgb => 4,
         TextureFormat.Bgra8Srgb => 4,
-        TextureFormat.Rgb16Unorm => 6,
-        TextureFormat.Rgb16Float => 6,
-        TextureFormat.Rgb32Float => 12,
-        TextureFormat.Rgb32Uint => 12,
         TextureFormat.Rgba32Float => 16,
         _ => -1,
     };

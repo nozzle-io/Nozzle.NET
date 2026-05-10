@@ -816,6 +816,26 @@ public class PixelConvertValidationTests
     }
 
     [Fact]
+    public void SwizzleChannels_rgb_formats_unsupported()
+    {
+        var rgbFormats = new[] {
+            TextureFormat.Rgb8Unorm,
+            TextureFormat.Rgb16Unorm,
+            TextureFormat.Rgb16Float,
+            TextureFormat.Rgb32Float,
+            TextureFormat.Rgb32Uint,
+        };
+        foreach (var fmt in rgbFormats)
+        {
+            var ex = Assert.Throws<NozzleException>(() =>
+                PixelConvert.SwizzleChannels(s_big, s_big, width: 1, height: 1,
+                    srcRowBytes: 16, dstRowBytes: 16,
+                    format: fmt, permuteMap: (0, 1, 2, 3)));
+            Assert.Equal(ErrorCode.ErrorUnsupportedFormat, ex.ErrorCode);
+        }
+    }
+
+    [Fact]
     public void SwizzleChannels_unknown_format_throws()
     {
         var ex = Assert.Throws<NozzleException>(() =>
