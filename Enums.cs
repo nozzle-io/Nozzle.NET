@@ -1,3 +1,5 @@
+using System;
+
 namespace Nozzle;
 
 public enum ErrorCode
