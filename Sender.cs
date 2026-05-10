@@ -37,6 +37,31 @@ public sealed class Sender : IDisposable
         }
     }
 
+    public static uint ResolveFallbackFlags(string name, string applicationName, uint ringBufferSize = 3, bool allowFormatFallback = false)
+    {
+        unsafe
+        {
+            var nameBytes = System.Text.Encoding.UTF8.GetBytes(name + '\0');
+            var appBytes = System.Text.Encoding.UTF8.GetBytes(applicationName + '\0');
+
+            fixed (byte* pName = nameBytes)
+            fixed (byte* pApp = appBytes)
+            {
+                var desc = new NativeMethods.SenderDesc
+                {
+                    Name = pName,
+                    ApplicationName = pApp,
+                    RingBufferSize = ringBufferSize,
+                    AllowFormatFallback = allowFormatFallback ? 1 : 0,
+                };
+
+                uint flags;
+                ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_resolve_fallback_flags(&desc, &flags));
+                return flags;
+            }
+        }
+    }
+
     public Frame AcquireWritableFrame(uint width, uint height, TextureFormat format)
     {
         unsafe

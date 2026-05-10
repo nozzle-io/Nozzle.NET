@@ -74,6 +74,16 @@ public sealed class Frame : IDisposable
         }
     }
 
+    public ResolvedTextureFormat GetResolvedFormat()
+    {
+        unsafe
+        {
+            var resolved = new NativeMethods.ResolvedTextureFormat();
+            ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_frame_get_resolved_format(_handle, &resolved));
+            return ResolvedTextureFormat.FromNative(resolved);
+        }
+    }
+
     public void CopyToNativeTexture(IntPtr nativeTexture, uint width, uint height, TextureFormat format)
     {
         unsafe
