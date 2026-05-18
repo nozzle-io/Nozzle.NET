@@ -35,6 +35,7 @@ internal static unsafe partial class NativeMethods
         ErrorSenderClosed = 9,
         ErrorTimeout = 10,
         ErrorBackendError = 11,
+        ErrorCommandFailed = 12,
     }
 
     public enum BackendType : int
