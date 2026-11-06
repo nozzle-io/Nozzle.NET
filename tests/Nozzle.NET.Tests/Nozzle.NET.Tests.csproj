@@ -21,6 +21,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../../Nozzle.NET.csproj" />
+    <None Include="../../deps/nozzle/tools/enum_manifest.json"
+          Link="enum_manifest.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
