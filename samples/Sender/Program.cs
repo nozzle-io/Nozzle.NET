@@ -35,17 +35,24 @@ try
         }
         nextTime = now + interval;
 
-        using var frame = sender.AcquireWritableFrame(Width, Height, TextureFormat.Rgba32Float);
+        try
         {
-            using var map = frame.LockWritablePixels();
-            FillGradient(map, frameIndex);
-        }
-        sender.CommitFrame(frame);
+            using var frame = sender.AcquireWritableFrame(Width, Height, TextureFormat.Rgba32Float);
+            {
+                using var map = frame.LockWritablePixels();
+                FillGradient(map, frameIndex);
+            }
+            sender.CommitFrame(frame);
 
-        frameIndex++;
-        if (frameIndex % (uint)Fps == 0)
+            frameIndex++;
+            if (frameIndex % (uint)Fps == 0)
+            {
+                Console.WriteLine($"Sent {frameIndex} frames");
+            }
+        }
+        catch (NozzleException error) when (error.ErrorCode == ErrorCode.Timeout)
         {
-            Console.WriteLine($"Sent {frameIndex} frames");
+            // Drop this frame; nextTime still paces the next attempt.
         }
     }
 }
