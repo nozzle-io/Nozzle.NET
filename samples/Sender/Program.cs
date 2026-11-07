@@ -50,7 +50,7 @@ try
                 Console.WriteLine($"Sent {frameIndex} frames");
             }
         }
-        catch (NozzleException error) when (error.ErrorCode == ErrorCode.Timeout)
+        catch (NozzleException error) when (error.ErrorCode == ErrorCode.ErrorTimeout)
         {
             // Drop this frame; nextTime still paces the next attempt.
         }
