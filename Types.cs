@@ -103,28 +103,6 @@ public readonly struct ConnectedSenderInfo
             NativeFormatModifier = native.NativeFormatModifier,
         };
     }
-
-    internal static ConnectedSenderInfo FromNative(NativeMethods.ConnectedSenderInfo native)
-    {
-        unsafe
-        {
-            return new ConnectedSenderInfo
-            {
-                Name = Marshal.PtrToStringUTF8((nint)native.Name) ?? "",
-                ApplicationName = Marshal.PtrToStringUTF8((nint)native.ApplicationName) ?? "",
-                Id = Marshal.PtrToStringUTF8((nint)native.Id) ?? "",
-                Backend = (BackendType)native.Backend,
-                Width = native.Width,
-                Height = native.Height,
-                Format = (TextureFormat)native.Format,
-                SemanticFormat = (TextureFormat)native.SemanticFormat,
-                EstimatedFps = native.EstimatedFps,
-                FrameCounter = native.FrameCounter,
-                LastUpdateTimeNs = native.LastUpdateTimeNs,
-                NativeFormatModifier = native.NativeFormatModifier,
-            };
-        }
-    }
 }
 
 /// <summary>Owned metadata and the receiver's last-observed connection state, not a fresh liveness check.</summary>

@@ -1,7 +1,6 @@
 # Metadata ABI Probe
 
-This header-only C executable measures the legacy `NozzleConnectedSenderInfo`
-and the two owned snapshot layouts from the checked-out
+This header-only C executable measures the two owned snapshot layouts from the checked-out
 `deps/nozzle/include/nozzle/nozzle_c.h`. It does not
 link core, call the getter, create a receiver, or exercise a GPU backend. Its
 JSON reports the native sizes, pointer width, every field offset, and tail widths.
@@ -22,7 +21,7 @@ On macOS/Linux, generate the fixture and run the focused managed tests:
 ```sh
 build/native-abi/nozzle_info_abi > build/native-abi/connected-info.json
 export NOZZLE_INFO_ABI_JSON="$PWD/build/native-abi/connected-info.json"
-dotnet test Nozzle.NET.sln --filter "FullyQualifiedName~NativeConnectedSenderInfoLayoutTests|FullyQualifiedName~InfoSnapshotTests&Category!=NativeMetadata"
+dotnet test Nozzle.NET.sln --filter "FullyQualifiedName~InfoSnapshotTests&Category!=NativeMetadata"
 ```
 
 For the default Windows Visual Studio generator, use PowerShell:
@@ -30,7 +29,7 @@ For the default Windows Visual Studio generator, use PowerShell:
 ```powershell
 build/native-abi/Release/nozzle_info_abi.exe > build/native-abi/connected-info.json
 $env:NOZZLE_INFO_ABI_JSON = "$PWD/build/native-abi/connected-info.json"
-dotnet test Nozzle.NET.sln --filter "FullyQualifiedName~NativeConnectedSenderInfoLayoutTests|FullyQualifiedName~InfoSnapshotTests&Category!=NativeMetadata"
+dotnet test Nozzle.NET.sln --filter "FullyQualifiedName~InfoSnapshotTests&Category!=NativeMetadata"
 ```
 
 CI generates and prints fresh probe output on all three existing OS jobs before
@@ -39,9 +38,10 @@ pointer-width mismatch fails the tests; none is treated as a skip. The probe and
 managed process must target the same architecture. This is not a claim of 32-bit
 coverage or runtime getter overwrite reproduction.
 
-The legacy checks retain the regression for the formerly missing native-format
-kind/value fields: size, all field offsets, and the modifier tail must match.
-Snapshot checks are additive, not a replacement for that legacy ABI coverage.
+Snapshot checks cover size, all field offsets, and the native-format modifier tail.
+The obsolete borrowed connected-info layout is no longer imported or measured.
+Discovery's separate sender-info array and enumeration/free APIs are unchanged;
+this probe does not measure their layout.
 
 ## macOS Real Getter Smoke
 

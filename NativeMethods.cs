@@ -200,25 +200,6 @@ internal static unsafe partial class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct ConnectedSenderInfo
-    {
-        public byte* Name;
-        public byte* ApplicationName;
-        public byte* Id;
-        public BackendType Backend;
-        public uint Width;
-        public uint Height;
-        public TextureFormat Format;
-        public TextureFormat SemanticFormat;
-        public double EstimatedFps;
-        public ulong FrameCounter;
-        public ulong LastUpdateTimeNs;
-        public NativeFormatKind NativeFormatKind;
-        public uint NativeFormatValue;
-        public ulong NativeFormatModifier;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
     public struct FrameInfo
     {
         public ulong FrameIndex;
@@ -299,9 +280,6 @@ internal static unsafe partial class NativeMethods
     public static partial ErrorCode nozzle_sender_commit_frame(NozzleSender* sender, NozzleFrame* frame);
 
     [LibraryImport(LibraryName)]
-    public static partial ErrorCode nozzle_sender_get_info(NozzleSender* sender, SenderInfo* out_info);
-
-    [LibraryImport(LibraryName)]
     public static partial ErrorCode nozzle_sender_get_info_snapshot(NozzleSender* sender, SenderInfoSnapshot* out_info);
 
     // ========== Receiver API ==========
@@ -315,10 +293,6 @@ internal static unsafe partial class NativeMethods
     [LibraryImport(LibraryName)]
     public static partial ErrorCode nozzle_receiver_acquire_frame(
         NozzleReceiver* receiver, AcquireDesc* desc, NozzleFrame** out_frame);
-
-    [LibraryImport(LibraryName)]
-    public static partial ErrorCode nozzle_receiver_get_connected_info(
-        NozzleReceiver* receiver, ConnectedSenderInfo* out_info);
 
     [LibraryImport(LibraryName)]
     public static partial ErrorCode nozzle_receiver_get_connected_info_snapshot(
