@@ -74,6 +74,12 @@ owned managed strings and values. Their signatures, metadata fields, defaults,
 and native-error exception behavior are unchanged. Discovery still copies its
 separately allocated enumeration before freeing it.
 
+These getters require a native library exporting
+`nozzle_sender_get_info_snapshot` and
+`nozzle_receiver_get_connected_info_snapshot`, as provided by the recorded
+core submodule. Older libraries exposing only the legacy getters are not
+supported by these wrapper methods; there is no borrowed-pointer fallback.
+
 `Receiver.GetConnectionSnapshot()` additionally returns a `ConnectionSnapshot`
 with `Connected` and `Info` from one native snapshot call. This is the receiver's
 last-observed state, not a fresh liveness check or a reconnect operation. After
@@ -92,7 +98,7 @@ Getter calls on disposed handles still throw `NozzleException` with
 
 ## API Coverage
 
-All functions from `nozzle_c.h` are bound:
+Bound C API families include:
 
 - Sender: create, destroy, acquire_writable_frame, commit_frame, get_info, get_info_snapshot, publish_texture, publish_gl_texture, publish_native_texture
 - Receiver: create, destroy, acquire_frame, get_connected_info, get_connected_info_snapshot
