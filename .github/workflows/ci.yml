@@ -14,6 +14,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
@@ -26,6 +27,23 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Compile header-only connected-info ABI probe
+        run: |
+          cmake -S tests/native_abi -B build/native-abi
+          cmake --build build/native-abi --config Release
+
+      - name: Record native connected-info layout
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            build/native-abi/Release/nozzle_info_abi.exe > build/native-abi/connected-info.json
+          else
+            build/native-abi/nozzle_info_abi > build/native-abi/connected-info.json
+          fi
+          cat build/native-abi/connected-info.json
+
       - run: dotnet build Nozzle.NET.sln
 
       - run: dotnet test Nozzle.NET.sln --no-build --verbosity normal
+        env:
+          NOZZLE_INFO_ABI_JSON: ${{ github.workspace }}/build/native-abi/connected-info.json
