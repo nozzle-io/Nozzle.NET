@@ -512,6 +512,8 @@ public class NativeConnectedSenderInfoLayoutTests
     [InlineData("EstimatedFps", "estimated_fps")]
     [InlineData("FrameCounter", "frame_counter")]
     [InlineData("LastUpdateTimeNs", "last_update_time_ns")]
+    [InlineData("NativeFormatKind", "native_format_kind")]
+    [InlineData("NativeFormatValue", "native_format_value")]
     [InlineData("NativeFormatModifier", "native_format_modifier")]
     public void Field_offsets_match_c_abi(string managedField, string nativeField)
     {

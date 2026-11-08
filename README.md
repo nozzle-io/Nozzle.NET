@@ -80,7 +80,7 @@ All functions from `nozzle_c.h` are bound:
 
 ## CI Status
 
-CI is **green but does not validate P/Invoke correctness**. The test suite contains 23 unit tests (enum values, default constructors, etc.) that pass without the native library. The 2 tests that actually call native functions are marked `[Skip]` because CI has no `libnozzle` available. P/Invoke marshalling correctness is only verifiable in an environment with the native library present.
+CI on macOS, Windows, and Linux compiles a [header-only connected-info ABI probe](tests/native_abi/README.md) and compares its native size and field offsets with the P/Invoke struct, including the native-format kind/value fields before the modifier. This validates the declared layout, not a real getter call or GPU behavior. Other managed tests cover enum contracts, value conversions, and managed lifetime logic; the native sender/receiver integration tests remain skipped. Passing CI is not evidence of complete P/Invoke or runtime interoperability correctness.
 
 ## License
 

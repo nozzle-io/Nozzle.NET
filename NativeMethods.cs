@@ -180,6 +180,8 @@ internal static unsafe partial class NativeMethods
         public double EstimatedFps;
         public ulong FrameCounter;
         public ulong LastUpdateTimeNs;
+        public NativeFormatKind NativeFormatKind;
+        public uint NativeFormatValue;
         public ulong NativeFormatModifier;
     }
 
