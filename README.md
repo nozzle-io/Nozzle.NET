@@ -67,12 +67,41 @@ foreach (var s in senders)
 }
 ```
 
+### Owned Metadata Snapshots
+
+`Sender.GetInfo()` and `Receiver.GetConnectedInfo()` copy native snapshots into
+owned managed strings and values. Their signatures, metadata fields, defaults,
+and native-error exception behavior are unchanged. Discovery still copies its
+separately allocated enumeration before freeing it.
+
+These getters require a native library exporting
+`nozzle_sender_get_info_snapshot` and
+`nozzle_receiver_get_connected_info_snapshot`, as provided by the recorded
+core submodule. Older libraries exposing only the legacy getters are not
+supported by these wrapper methods; there is no borrowed-pointer fallback.
+
+`Receiver.GetConnectionSnapshot()` additionally returns a `ConnectionSnapshot`
+with `Connected` and `Info` from one native snapshot call. This is the receiver's
+last-observed state, not a fresh liveness check or a reconnect operation. After
+an acquisition observes disconnection, `Connected` is false and `Info` retains
+the last-known sender metadata. `GetConnectedInfo()` projects that metadata;
+successful metadata retrieval does not itself imply a connection.
+
+Returned values survive later calls and disposal of either handle. The snapshot
+getters keep their managed owner alive for the current call; this prevents
+finalization during that call, not concurrent explicit disposal. Disposal
+must not race with calls on the same handle; this change does not establish
+general wrapper thread safety. `AcquireFrame()` still returns null for timeout,
+sender-closed, and sender-not-found, so null alone does not identify the cause.
+Getter calls on disposed handles still throw `NozzleException` with
+`ErrorCode.ErrorInvalidArgument`.
+
 ## API Coverage
 
-All functions from `nozzle_c.h` are bound:
+Bound C API families include:
 
-- Sender: create, destroy, acquire_writable_frame, commit_frame, get_info, publish_texture, publish_gl_texture, publish_native_texture
-- Receiver: create, destroy, acquire_frame, get_connected_info
+- Sender: create, destroy, acquire_writable_frame, commit_frame, get_info, get_info_snapshot, publish_texture, publish_gl_texture, publish_native_texture
+- Receiver: create, destroy, acquire_frame, get_connected_info, get_connected_info_snapshot
 - Frame: release, get_info, lock_pixels, unlock_pixels, lock_writable_pixels, unlock_writable_pixels, copy_to_gl_texture, copy_to_native_texture
 - Texture: wrap, destroy
 - Discovery: enumerate_senders, free_sender_info_array
@@ -80,7 +109,9 @@ All functions from `nozzle_c.h` are bound:
 
 ## CI Status
 
-CI on macOS, Windows, and Linux compiles a [header-only connected-info ABI probe](tests/native_abi/README.md) and compares its native size and field offsets with the P/Invoke struct, including the native-format kind/value fields before the modifier. This validates the declared layout, not a real getter call or GPU behavior. Other managed tests cover enum contracts, value conversions, and managed lifetime logic; the native sender/receiver integration tests remain skipped. Passing CI is not evidence of complete P/Invoke or runtime interoperability correctness.
+CI on macOS, Windows, and Linux compiles a [header-only ABI probe](tests/native_abi/README.md) and compares the legacy connected-info and new snapshot declarations with compiler-derived sizes and offsets, including native-format kind/value/modifier. Snapshot alignment and inline string capacities are also checked. Portable tests cover bounded UTF-8 decoding, owned conversions, synthetic scalar preservation, enum contracts, and managed lifetime logic. This portable coverage is not real getter or GPU evidence.
+
+macOS additionally builds the exact pinned core dylib and runs one required same-process metadata smoke through the public getters with real Metal-backed sender/receiver handles. A test-only resolver loads the explicit built path; missing setup/library/backend fails, and CI checks that the named case executed and passed exactly once. It checks UTF-8 identity, retained owned values, observed disconnection, and disposed-getter errors, without publishing frames. It does not establish pixel correctness, cross-process behavior, concurrent disposal safety, or Windows/Linux runtime getter coverage. Older native creation placeholders remain skipped. The snapshot migration has no claimed deterministic preexisting public-API behavioral red; passing CI is not complete P/Invoke or runtime interoperability validation.
 
 ## License
 

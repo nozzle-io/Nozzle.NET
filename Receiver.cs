@@ -58,11 +58,24 @@ public sealed class Receiver : IDisposable
 
     public ConnectedSenderInfo GetConnectedInfo()
     {
+        return GetConnectionSnapshot().Info;
+    }
+
+    /// <summary>Copies last-observed state and metadata together; disconnected identity is retained.</summary>
+    public ConnectionSnapshot GetConnectionSnapshot()
+    {
         unsafe
         {
-            var info = new NativeMethods.ConnectedSenderInfo();
-            ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_receiver_get_connected_info(_handle, &info));
-            return ConnectedSenderInfo.FromNative(info);
+            try
+            {
+                var info = new NativeMethods.ConnectedSenderSnapshot();
+                ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_receiver_get_connected_info_snapshot(_handle, &info));
+                return ConnectionSnapshot.FromNative(info);
+            }
+            finally
+            {
+                GC.KeepAlive(this);
+            }
         }
     }
 
