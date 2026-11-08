@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using Xunit;
 
 namespace Nozzle.Tests;
@@ -480,33 +482,50 @@ public class NativeFrameInfoLayoutTests
 
 public class NativeConnectedSenderInfoLayoutTests
 {
+    private static Dictionary<string, int> NativeLayout()
+    {
+        var path = Environment.GetEnvironmentVariable("NOZZLE_INFO_ABI_JSON");
+        Assert.False(string.IsNullOrWhiteSpace(path),
+            "NOZZLE_INFO_ABI_JSON is required; build/run tests/native_abi first.");
+        Assert.True(File.Exists(path), $"Native ABI probe output missing: {path}");
+        var layout = JsonSerializer.Deserialize<Dictionary<string, int>>(File.ReadAllText(path!))!;
+        Assert.NotNull(layout);
+        Assert.Equal(IntPtr.Size, layout["pointer_size"]);
+        return layout;
+    }
+
     [Fact]
     public void Size_matches_c_abi()
     {
-        Assert.Equal(80, Marshal.SizeOf<NativeMethods.ConnectedSenderInfo>());
+        Assert.Equal(NativeLayout()["size"], Marshal.SizeOf<NativeMethods.ConnectedSenderInfo>());
+    }
+
+    [Theory]
+    [InlineData("Name", "name")]
+    [InlineData("ApplicationName", "application_name")]
+    [InlineData("Id", "id")]
+    [InlineData("Backend", "backend")]
+    [InlineData("Width", "width")]
+    [InlineData("Height", "height")]
+    [InlineData("Format", "format")]
+    [InlineData("SemanticFormat", "semantic_format")]
+    [InlineData("EstimatedFps", "estimated_fps")]
+    [InlineData("FrameCounter", "frame_counter")]
+    [InlineData("LastUpdateTimeNs", "last_update_time_ns")]
+    [InlineData("NativeFormatModifier", "native_format_modifier")]
+    public void Field_offsets_match_c_abi(string managedField, string nativeField)
+    {
+        Assert.Equal(NativeLayout()[nativeField],
+            (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>(managedField));
     }
 
     [Fact]
-    public void Field_offsets_match_c_abi()
+    public void Native_tail_fits_managed_buffer()
     {
-        Assert.Equal(0, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("Name"));
-        Assert.Equal(8, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("ApplicationName"));
-        Assert.Equal(16, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("Id"));
-        Assert.Equal(24, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("Backend"));
-        Assert.Equal(28, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("Width"));
-        Assert.Equal(32, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("Height"));
-        Assert.Equal(36, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("Format"));
-        Assert.Equal(40, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("SemanticFormat"));
-        Assert.Equal(48, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("EstimatedFps"));
-        Assert.Equal(56, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("FrameCounter"));
-        Assert.Equal(64, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("LastUpdateTimeNs"));
-        Assert.Equal(72, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("NativeFormatModifier"));
-    }
-
-    [Fact]
-    public void SemanticFormat_is_at_offset_40()
-    {
-        Assert.Equal(40, (int)Marshal.OffsetOf<NativeMethods.ConnectedSenderInfo>("SemanticFormat"));
+        var layout = NativeLayout();
+        var nativeEnd = layout["native_format_modifier"] + layout["native_format_modifier_size"];
+        Assert.True(nativeEnd <= Marshal.SizeOf<NativeMethods.ConnectedSenderInfo>(),
+            $"Native modifier ends at {nativeEnd}; managed buffer has {Marshal.SizeOf<NativeMethods.ConnectedSenderInfo>()} bytes.");
     }
 
     [Fact]
