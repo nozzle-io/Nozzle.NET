@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Nozzle;
 
@@ -41,6 +42,17 @@ public readonly struct SenderInfo
 
     public SenderInfo() { }
 
+    internal static unsafe SenderInfo FromNative(NativeMethods.SenderInfoSnapshot native)
+    {
+        return new SenderInfo
+        {
+            Name = SnapshotText.Decode(new ReadOnlySpan<byte>(native.Name, NativeMethods.SenderNameCapacity)),
+            ApplicationName = SnapshotText.Decode(new ReadOnlySpan<byte>(native.ApplicationName, NativeMethods.ApplicationNameCapacity)),
+            Id = SnapshotText.Decode(new ReadOnlySpan<byte>(native.Id, NativeMethods.SenderIdCapacity)),
+            Backend = (BackendType)native.Backend,
+        };
+    }
+
     internal static SenderInfo FromNative(NativeMethods.SenderInfo native)
     {
         unsafe
@@ -73,6 +85,25 @@ public readonly struct ConnectedSenderInfo
 
     public ConnectedSenderInfo() { }
 
+    internal static unsafe ConnectedSenderInfo FromNative(NativeMethods.ConnectedSenderSnapshot native)
+    {
+        return new ConnectedSenderInfo
+        {
+            Name = SnapshotText.Decode(new ReadOnlySpan<byte>(native.Name, NativeMethods.SenderNameCapacity)),
+            ApplicationName = SnapshotText.Decode(new ReadOnlySpan<byte>(native.ApplicationName, NativeMethods.ApplicationNameCapacity)),
+            Id = SnapshotText.Decode(new ReadOnlySpan<byte>(native.Id, NativeMethods.SenderIdCapacity)),
+            Backend = (BackendType)native.Backend,
+            Width = native.Width,
+            Height = native.Height,
+            Format = (TextureFormat)native.Format,
+            SemanticFormat = (TextureFormat)native.SemanticFormat,
+            EstimatedFps = native.EstimatedFps,
+            FrameCounter = native.FrameCounter,
+            LastUpdateTimeNs = native.LastUpdateTimeNs,
+            NativeFormatModifier = native.NativeFormatModifier,
+        };
+    }
+
     internal static ConnectedSenderInfo FromNative(NativeMethods.ConnectedSenderInfo native)
     {
         unsafe
@@ -93,6 +124,31 @@ public readonly struct ConnectedSenderInfo
                 NativeFormatModifier = native.NativeFormatModifier,
             };
         }
+    }
+}
+
+/// <summary>Owned metadata and the receiver's last-observed connection state, not a fresh liveness check.</summary>
+public readonly struct ConnectionSnapshot
+{
+    public bool Connected { get; init; }
+    public ConnectedSenderInfo Info { get; init; }
+
+    internal static ConnectionSnapshot FromNative(NativeMethods.ConnectedSenderSnapshot native)
+    {
+        return new ConnectionSnapshot
+        {
+            Connected = native.Connected != 0,
+            Info = ConnectedSenderInfo.FromNative(native),
+        };
+    }
+}
+
+internal static class SnapshotText
+{
+    internal static string Decode(ReadOnlySpan<byte> bytes)
+    {
+        var nul = bytes.IndexOf((byte)0);
+        return Encoding.UTF8.GetString(nul < 0 ? bytes : bytes[..nul]);
     }
 }
 

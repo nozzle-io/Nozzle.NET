@@ -157,6 +157,39 @@ internal static unsafe partial class NativeMethods
 
     // ========== Info Structs ==========
 
+    internal const int SenderNameCapacity = 64;
+    internal const int ApplicationNameCapacity = 64;
+    internal const int SenderIdCapacity = 37;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SenderInfoSnapshot
+    {
+        public fixed byte Name[SenderNameCapacity];
+        public fixed byte ApplicationName[ApplicationNameCapacity];
+        public fixed byte Id[SenderIdCapacity];
+        public BackendType Backend;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ConnectedSenderSnapshot
+    {
+        public fixed byte Name[SenderNameCapacity];
+        public fixed byte ApplicationName[ApplicationNameCapacity];
+        public fixed byte Id[SenderIdCapacity];
+        public uint Connected;
+        public BackendType Backend;
+        public uint Width;
+        public uint Height;
+        public TextureFormat Format;
+        public TextureFormat SemanticFormat;
+        public double EstimatedFps;
+        public ulong FrameCounter;
+        public ulong LastUpdateTimeNs;
+        public NativeFormatKind NativeFormatKind;
+        public uint NativeFormatValue;
+        public ulong NativeFormatModifier;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct SenderInfo
     {
@@ -268,6 +301,9 @@ internal static unsafe partial class NativeMethods
     [LibraryImport(LibraryName)]
     public static partial ErrorCode nozzle_sender_get_info(NozzleSender* sender, SenderInfo* out_info);
 
+    [LibraryImport(LibraryName)]
+    public static partial ErrorCode nozzle_sender_get_info_snapshot(NozzleSender* sender, SenderInfoSnapshot* out_info);
+
     // ========== Receiver API ==========
 
     [LibraryImport(LibraryName)]
@@ -283,6 +319,10 @@ internal static unsafe partial class NativeMethods
     [LibraryImport(LibraryName)]
     public static partial ErrorCode nozzle_receiver_get_connected_info(
         NozzleReceiver* receiver, ConnectedSenderInfo* out_info);
+
+    [LibraryImport(LibraryName)]
+    public static partial ErrorCode nozzle_receiver_get_connected_info_snapshot(
+        NozzleReceiver* receiver, ConnectedSenderSnapshot* out_info);
 
     // ========== Frame API ==========
 

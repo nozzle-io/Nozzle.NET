@@ -44,6 +44,36 @@ jobs:
 
       - run: dotnet build Nozzle.NET.sln
 
-      - run: dotnet test Nozzle.NET.sln --no-build --verbosity normal
+      - name: Portable managed and header ABI tests
+        run: dotnet test Nozzle.NET.sln --no-build --verbosity normal --filter "Category!=NativeMetadata"
         env:
           NOZZLE_INFO_ABI_JSON: ${{ github.workspace }}/build/native-abi/connected-info.json
+
+      - name: Build pinned core dylib for metadata smoke
+        if: runner.os == 'macOS'
+        run: |
+          expected=$(git rev-parse HEAD:deps/nozzle)
+          actual=$(git -C deps/nozzle rev-parse HEAD)
+          test "$actual" = "$expected"
+          echo "Native metadata core: $actual"
+          cmake -S deps/nozzle -B build/native-core -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DNOZZLE_BUILD_TESTS=OFF -DNOZZLE_BUILD_EXAMPLES=OFF
+          cmake --build build/native-core --target nozzle --parallel 3
+          test -f build/native-core/libnozzle.dylib
+
+      - name: Required macOS real metadata getters
+        if: runner.os == 'macOS'
+        timeout-minutes: 3
+        env:
+          NOZZLE_NATIVE_LIBRARY: ${{ github.workspace }}/build/native-core/libnozzle.dylib
+        run: |
+          dotnet test tests/Nozzle.NET.Tests/Nozzle.NET.Tests.csproj --no-build --verbosity normal --filter "Category=NativeMetadata" --logger "trx;LogFileName=native-metadata.trx" --results-directory build/native-results
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          root = ET.parse("build/native-results/native-metadata.trx").getroot()
+          ns = {"t": "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"}
+          results = root.findall("t:Results/t:UnitTestResult", ns)
+          expected = "Nozzle.Tests.NativeInfoSnapshotTests.Real_getters_return_owned_metadata_and_observed_disconnect"
+          if len(results) != 1 or results[0].get("testName") != expected or results[0].get("outcome") != "Passed":
+              raise SystemExit("Required native metadata case did not execute and pass exactly once")
+          print("Required native metadata case: 1 executed, 1 passed, 0 skipped")
+          PY

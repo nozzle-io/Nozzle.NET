@@ -112,9 +112,16 @@ public sealed class Sender : IDisposable
     {
         unsafe
         {
-            var info = new NativeMethods.SenderInfo();
-            ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_sender_get_info(_handle, &info));
-            return SenderInfo.FromNative(info);
+            try
+            {
+                var info = new NativeMethods.SenderInfoSnapshot();
+                ErrorHelper.ThrowIfFailed(NativeMethods.nozzle_sender_get_info_snapshot(_handle, &info));
+                return SenderInfo.FromNative(info);
+            }
+            finally
+            {
+                GC.KeepAlive(this);
+            }
         }
     }
 
